@@ -1,0 +1,236 @@
+---
+layout: post
+title: React和它的小伙伴们(3) - React Hooks
+date: 2021-7-10 16:00:00 +0800
+category: 技术
+tags: [JavaScript, 前端, React, 源码]
+---
+
+本文为近期有关于React Hooks源码学习的笔记小结，原文对应为：
+
+[https://juejin.cn/post/6944863057000529933](https://juejin.cn/post/6944863057000529933)
+
+# 一 为什么要使用Hooks？
+
+React Hooks是React 16.8中引入的有关于函数组件的相关进化，解决了函数组件没有state、生命周期逻辑不能复用的问题。
+
+引申： Class组件和函数式组件的优缺点
+
+Function组件在之前主要做简单的展示逻辑，没有复杂的业务逻辑或者状态记录。而Class组件有着完善的生命周期支撑。在Hooks引入之后，函数式组件也可以进行状态记录，并且可以进行一些逻辑复用，提供了另一种编码的可能。
+
+另一层意义上，后文也会说道，Class组件只要一次实例化之后就能保存状态数据，而函数式组件每次都会重新执行，所以需要Hooks这种机制来保存状态数据。
+
+# 二 TL;DR
+
+1. 函数组件的执行函数：renderWithHooks。两大功能，执行函数组件、改变ReactCurrentDispatch对象。
+2. 初始化Hooks：
+    - mountWorkInProgressHook生成hooks链表
+    - mountState初始化state
+    - dispatchAction控制无状态组件更新
+    - mountEffect初始化useEffect内容
+    - mountMemo初始化useMemo
+    - mountRef初始化useRef
+    - mountState初始化useState
+3. 更新hooks
+    - updateWorkInProgressHook更新hooks链表，找到对应hooks
+    - updateState获取最新state
+    - updateEffect更新updateQueue
+    - updateMemo/updateRefs之类的进行更新
+
+# 三 从何而来?
+
+正如前面所说的，Hooks就是一个增强函数式组件功能的东西。所以，在探究Hooks之前，可以先看一下Function组件是在哪里开始进行处理的。
+
+function组件的初始化是调用这个方法开始的：
+
+```jsx
+renderWithHooks(
+	null,                   // current Fiber
+	workInProgress,         // workInProgress Fiber
+	Component,              // 函数组件本身
+	props,                  // 函数组件的props
+	context,                // 函数组件的context
+	renderExpirationTime    // 渲染优先级标志
+)
+```
+
+引申：current Fiber和workInProgress Fiber：
+
+两者是React Fiber所用到的双缓存两棵树，current是上一次渲染（也就是现在在展示的DOM）所对应的Fiber树状结构，而在触发更新渲染之后会在workInProgress这个Fiber树上进行构建和处理，构建完成之后，会把workInProgress赋值给current树。所以当current为null的时候，可以知道这一定是这个程序第一次run，也就是初次渲染。
+
+这个方法中也主要用到了以下这些数据结构：
+
+- workInProgress.memoizedState:
+
+    对于Class组件，这个内容主要是用来存放state信息，而在函数式组件中，将以 **链表** 形式来存放hooks的信息。
+
+    需要注意区分两个memoizedState：
+
+    此处Fiber树上的会保存hooks信息链表或者state信息，而hooks数据结构中也会有这个内容，但是其中存储的是每个Hooks不同的内容
+
+- currentHooks：current树上的当前调度的hooks节点。
+- workInProgressHooks：workInProgress树上的当前调度的hooks节点
+
+这个方法的主要做的事情：
+
+1. 置空workInProgress树上的memoizedState和updateQueue。接下来的步骤需要将新的信息放到这两个节点上面。
+2. 根据组件是否是第一次渲染，赋予ReactCurrentDispatcher.current不同的hooks调用方法名称。两个通过current树上是否有内容进行区分，两者的区别在一个是用HooksDispatcherOnMount中的方法来处理hooks对象，而非首次则用HooksDispatcherOnUpdate中的方法。
+3. 调用Component(props, secondArgs)来执行我们写的函数组件。我们的hooks组件会依次执行，然后保存到workInProgress树上。具体如何绑定在之后讲到
+4. 将ContextOnlyDispatcher赋值给ReactCurrentDispatcher.current。
+5. 置空一些currentHooks等的数据
+
+```jsx
+const HooksDispatcherOnMount = {
+  useCallback: mountCallback,
+  useEffect: mountEffect,
+  useLayoutEffect: mountLayoutEffect,
+  useMemo: mountMemo,
+  useReducer: mountReducer,
+  useRef: mountRef,
+  useState: mountState,
+};
+
+const HooksDispatcherOnUpdate = {
+  useCallback: updateCallback,
+  useEffect: updateEffect,
+  useLayoutEffect: updateLayoutEffect,
+  useMemo: updateMemo,
+  useReducer: updateReducer,
+  useRef: updateRef,
+  useState: updateState
+};
+
+```
+
+# 四 Hooks的初始化
+
+前面提到的方法第三步讲到了hooks的初始化操作，那么接下来就是了解如何进行初始化这些hooks。
+
+主要围绕四个重点Hooks：
+
+useState：组件状态和更新触发  useEffect：执行副作用
+
+useRef：保存数据                        useMemo：缓存优化
+
+## mountWorkInProgressHook
+
+所有Hooks的生成都需要调用这个方法，这个方法主要是为了生成Hooks的数据结构，并且把这些生成的Hooks放置到workInProgress树上的memoizeState上。
+
+Hooks的对象里存储的内容：
+
+1. **memoizedState**:  每个Hooks中会缓存不一样的数据。useState：state信息、useEffect：effect对象、useMemo：缓存的值、useRef：ref对象
+2. **baseQueue**：useState和useReducer中保存最新的更新队列。
+3. **baseState**：useState和useReducer中，一次更新中，产生的最新state的值
+4. **queue**：保存待更新队列pendingQueue，更新函数dispatch等信息
+5. **next**：指向下一个hooks对象
+
+因为这个Hooks结构，所以在Fiber树上的state会是一个通过Hooks中next对象链接的链表。
+
+**Q：为什么Hooks不能声明在条件语句中：**
+
+A：因为React中会进行对比current树和workInProgress树进行比较。如果在条件语句中声明Hooks的话，可能会导致两个树比较的hooks信息不相同（因为链表链接的next），涉及到读取state的操作的话，会发生异常。
+
+## useState与mountState
+
+1. 获得初始化的state，并将其赋值给mountWorkInProgressHook产生的hook对象的memoizedState和baseState属性，创建queue对象负责保存更新的信息。
+2. 利用dispatchAction（无状态组件更新机制）方法得到可以触发更新的方法。useState传出去的第二个内容为绑定了Fiber节点和updateQueue两个参数的dispatchAction方法。
+
+### dispatchAction作用机制
+
+1. 无论是类组件调用setState还是函数组件的dispatchAction都会产生一个update对象，记录此次更新的信息，然后把这个update放入待更新的pending队列中。（队列也是循环链表）
+2. 判断当前函数组件的Fiber是否出入渲染阶段。
+    - 处于更新阶段，那么就不需要更新组建，而是更新expirationTime即可。
+    - 不处于更新阶段，则调用lastRenderedReducer来获取最新的state，和上一次的currentState作比较。
+        - currentState和新state相同，就不会触发更新操作
+        - 不相同，调用scheduleUpdateOnFiber调度渲染到当前的Fiber。
+
+## useEffect与mountEffect
+
+1. 创建hooks对象，并且这里保存effect hooks的信息
+2. 调用pushEffect(tag, create, destroy, deps) 方法创建出effectHooks信息。
+3. 因为effect是一个闭包的运行环境，所以如果执行setTimeout等异步方法，可能会拿不到最新的依赖项数据。
+
+### pushEffect机制：
+
+作用： 创建effect对象，挂载updateQueue
+
+详细：判断这个组件是不是第一次渲染，那么创建componentUpdateQueue（workInProgress中的updateQueue），然后将effect放入其中。
+
+其中的updateQueue将会是一个循环链表。
+
+## useMemo与mountMemo
+
+创建一个hooks，执行useMemo的第一个参数，得到需要缓存的值，然后将值与deps记录下来，赋值给当前memoizedState
+
+## useRef与mountRef
+
+创建一个ref对象，对象的current来保存至，用memoizedState来保存这个对象。
+
+## 总结
+
+在一个函数组件第一次渲染上下文过程中，每个hooks产生一个hooks对象，形成链表。绑定在树的memoizedState上，对于effect会在workInProgress.updateQueue上绑定，在commit阶段执行每个effect钩子。
+
+这里有两个循环列表出现：
+
+1. 在dispatchAction时候提交的action
+2. 在useEffect中提交的effect
+
+# 五 Hooks的更新
+
+## updateWorkInProgressHook
+
+对于一次函数组件更新，当再次执行Hooks函数时，首先要从current树的Hooks中找到当前workInProgressHook对应的currentHooks，然后复制一份给workInProgressHook，接下来hook函数执行时，再把最新状态更新上去，以保证其不丢失。
+
+## useState的更新：updateState
+
+将setXXX中执行时候放入的pendingQueue内容（dispatchAction），合并至baseQueue。
+
+把当前useState或useReducer对应的hooks上的baseState和baseQueue更新到最新状态。循环baseQueue的update，复制并更新expirationTime，获取最新的state状态，然后执行useState上的每一个action。
+
+## useEffect的更新：updateEffect
+
+判断两次deps是否相等：
+
+- 若相等，则此时useEffect不需要执行，直接调用pushEffect（与初始化类似，把内容放入updateQueue中，tag为hookEffectTag）
+- 若不相等，那么需要更新effect，并直接赋值给hook.memoizedState（tag为hookHasEffect|hookEffectTag）
+
+在commit阶段，React通过tag来判断是否执行当前的effect函数。不管是不是都要执行都要push，是因为后一次的更新需要比较。
+
+## useMemo的更新：updateMemo
+
+判断deps是否相等，若不相等，那么因为依赖项目发生了改变，执行memo的第一个方法，得到新的值，放入hook.memoizedState。若相等，那么就不用执行，直接拿内容使用即可。
+
+## useRef的更新：updateRef
+
+返回缓存下来的值，无论函数如何执行，执行了多少次。
+
+因为这些内容都指向了同一个对象。
+
+# 问答
+
+Q1：在无状态组件中每一次执行函数上下文的时候，React用什么方式记录hooks的状态。
+
+A1： 利用Fiber树种的current树种对应Fiber结点的memoizedState中所保存的hooks数据结构所组成的链表。
+
+Q2：多个Hooks用什么来记录每一个hooks的顺序的？（为什么不能在条件语句中声明hooks？）
+
+A2：用Fiber结点中memoizedState中的数据结构链表。因为函数是组建每次都会重新执行，若条件变化会导致hooks顺序的变化，会导致workInProgress树种与current树种的内容无法匹配，产生读取状态数据时候的问题
+
+Q3：setState与useState的区别？
+
+A3：1. setState是Class组件特有的设置状态的方法，这个会直接在实例化的class组件中进行修改。而useState是函数式组件Hooks中使用的设定状态的方法，useState的数据保存和是否执行通过dispatchAction的操作进行判断
+
+2. setState不会对两次状态的变更进行比较，就算两个state是相同的都会进行更新。但是useState的设定的话，如果两次state相同就不会对其进行修改和改变。
+
+Q4：useRef为什么不需要依赖注入？
+
+A4：因为useRef只是运用了一个current指针指向一个内存对象，所以不需要对依赖项目进行判断。
+
+Q5：useMemo是如何缓存的？
+
+A5：将缓存的内容保存在hook的memoizedState中，方便后续的运行中，如果deps相同就直接取用。
+
+Q6：useEffect中为什么不能写异步async函数？
+
+A6：因为useEffect需要return一个函数，为了在下一次执行的时候apply执行这个函数进行销毁时候的操作。如果使用了async函数就会导致返回给React内核的是一个Promise，而没有apply方法，导致报错。所以要使用async的话需要重新包一层函数然后调用，这样就不会返回一个Promise给内核方法。
+

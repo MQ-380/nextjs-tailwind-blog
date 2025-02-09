@@ -1,0 +1,1225 @@
+---
+layout: post
+title: 计算几何专题练习
+date: 2016-05-25 16:50:00
+category: 技术
+tags: [计算几何, 算法]
+seo:
+  date_modified: 2020-03-11 23:02:29 +0800
+---
+
+# 计算几何专题练习
+
+P.S：含有数学公式。。。如没有显示麻烦刷新，谢谢。
+
+Contents：
+
+- [1.基础题目](#1)
+
+  ​ [1.1 uva11437](#1.1)
+
+  ​ [1.2 uva11800](#1.2)
+
+  ​ [1.3 uva11646](#1.3)
+
+- [2.二维几何计算](#2)
+
+  [2.1 uva11178 (EX.)](#2.1)
+
+  [2.2 uva1342(EX.)](#2.2)
+
+  [2.3 uva11796(EX.)](#2.3)
+
+- [3.二维几何算法](#3)
+
+  [3.1 uva10652(EX.)](#3.1)
+
+  [3.2 uva11168(EX.)](#3.2)
+
+  ​
+
+  ​
+
+  ​
+
+<h2 id="1"> 1 基础题目 </h2>
+
+<h3 id="1.1"> UVA 11437 </h3>
+
+1 本题主要运用到两个公式
+
+求三等分点的时候需要 定比分点公式
+
+已知三条边求三角形面积用海伦公式。。。。。（全是初高中数学- -）
+
+附上两个公式：
+
+**定比分点**：O为原点，就可以求得D的坐标
+
+$$
+若 \overrightarrow{BD} = \lambda \overrightarrow{DC}，有\overrightarrow{OD} = \frac{\overrightarrow{OB}+\lambda \overrightarrow{OC} }{1+\lambda}
+$$
+
+**海伦公式**：
+
+$$
+S = \sqrt{p(p-a)(p-b)(p-c)}  \quad 其中 p = \frac{1}{2} (a+b+c) \quad a/b/c为三边边长
+$$
+
+2 主要思路
+
+a 已知三点求出三个三等分点的坐标
+
+b 利用三等分点的坐标求出之间连线的向量
+
+c 利用向量求交点（模板）
+
+d 交点求长度
+
+e 求三角形面积（注意四舍五入）
+
+3 模板（利用一点和一个向量所得的直线的参数方程求，cross为叉积）
+
+```cpp
+Point crosspoint(Vector a,Vector b,Point af,Point bf){
+    Vector u;
+    u.make(bf,af);   //求BF-AF的向量
+    double t = cross(b,u)/cross(a,b);   //求交点的参数
+    Point k;     //交点
+    k.x = af.x + t * a.x;
+    k.y = af.y + t * a.y;
+    return k;
+}
+```
+
+4 代码
+
+```cpp
+#include <iostream>
+#include <cmath>
+
+using namespace std;
+
+struct Point{
+    double x,y;
+};
+struct Vector{
+    double x,y;
+    void make(Point a,Point b){
+        x = b.x - a.x;
+        y = b.y - a.y;
+    }
+};
+
+double cross(Vector a,Vector b){
+    return a.x*b.y - a.y*b.x;
+}
+
+Point crosspoint(Vector a,Vector b,Point af,Point bf){
+    Vector u;
+    u.make(bf,af);
+    double t = cross(b,u)/cross(a,b);
+    Point k;
+    k.x = af.x + t * a.x;
+    k.y = af.y + t * a.y;
+    return k;
+}
+
+double distance(Point a,Point b){
+    return sqrt((b.x-a.x)*(b.x-a.x)+(b.y-a.y)*(b.y-a.y));
+}
+
+int main(void){
+    int t;
+    cin>>t;
+    Point a,b,c,d,e,f,p,q,r;
+    while(t--){
+        cin>>a.x>>a.y>>b.x>>b.y>>c.x>>c.y;
+        d.x = (2*b.x+c.x)/3.0;
+        d.y = (2*b.y+c.y)/3.0;
+        e.x = (a.x+2*c.x)/3.0;
+        e.y = (a.y+2*c.y)/3.0;
+        f.x = (2*a.x+b.x)/3.0;
+        f.y = (2*a.y+b.y)/3.0;
+        Vector AD,CF,BE;
+        AD.make(a,d);
+        CF.make(c,f);
+        BE.make(b,e);
+        p = crosspoint(AD,BE,a,b);
+        q = crosspoint(BE,CF,b,c);
+        r = crosspoint(AD,CF,a,c);
+        double RP,RQ,QP;
+        RP = distance(r,p);
+        RQ = distance(r,q);
+        QP = distance(q,p);
+        double S,pi;
+        pi = (RP+RQ+QP)/2;
+        S = sqrt(pi*(pi-QP)*(pi-RQ)*(pi-RP));
+        long long Sans = ((int)(S+0.5)*10)/10;
+        cout<<Sans<<endl;
+    }
+}
+```
+
+<h3 id="1.2"> UVA 11800 </h3>
+
+1 题意：
+
+就是给4个点判断这个四边形是什么四边形。。。。
+
+2 陷阱
+
+四个点不一定按照逆时针或者顺时针可以ABCD标号的顺序来。。所以一开始就极角排序排定一下逆时针，排完序就可以ABCD的进行计算判断。
+
+3 主要计算的数据
+
+四条边和四个角。。。主要还是四个边的向量和长度。。因为浮点数的原因如果用角判断会有误差。所以用边才是坠吼的
+
+4 几个形状判断
+
+先判断90度。。有一个90度就进入矩形和正方形的判断。。。四条边都相等就是正方，否则是矩形。
+
+排除了正方之后，四条边相等就是菱形。。
+
+菱形排除完如果对边相等就是平行四边形。。。
+
+最后的坑就是梯形。。一开始陷入了同旁内角180度。。然后高相等。。。最后才想到直接判只要有一对平行（叉乘等于零）就好了。。。真是犯蠢了。。
+
+5 代码
+
+```cpp
+#include <iostream>
+#include <cmath>
+#include <algorithm>
+#include <vector>
+
+using namespace std;
+
+struct Point{
+    double x,y;
+};
+struct Vector{
+    double x,y;
+    void make(Point a,Point b){
+        x = b.x - a.x;
+        y = b.y - a.y;
+    }
+};
+
+double cross(Vector a,Vector b){
+    return a.x*b.y - a.y*b.x;
+}
+
+double intimes(Vector a,Vector b){
+    return a.x*b.x + a.y*b.y;
+}
+
+double length(Vector a){
+    return sqrt(a.x*a.x + a.y*a.y);
+}
+Point crosspoint(Vector a,Vector b,Point af,Point bf){
+    Vector u;
+    u.make(bf,af);
+    double t = cross(b,u)/cross(a,b);
+    Point k;
+    k.x = af.x + t * a.x;
+    k.y = af.y + t * a.y;
+    return k;
+}
+
+double distance(Point a,Point b){
+    return sqrt((b.x-a.x)*(b.x-a.x)+(b.y-a.y)*(b.y-a.y));
+}
+
+double cosangle(Vector a,Vector b){
+    return intimes(a,b)/length(a)*length(b);
+}
+Point origin;
+bool cmp(Point a,Point b){
+    Vector A,B;
+    A.make(origin, a);
+    B.make(origin, b);
+    return cross(A,B)<0;
+}
+
+double PTOL(Point p,Point a,Point b){
+    Vector v1,v2;
+    v1.make(a,b);
+    v2.make(a,p);
+    return fabs(cross(v1,v2)/length(v1));
+}
+
+int main(void){
+    int t;
+    cin>>t;
+    int cnt = 0;
+    while(t--){
+        vector<Point> ref;
+        ref.clear();
+        cnt++;
+        Point A,B,C,D;
+        cin>>A.x>>A.y>>B.x>>B.y>>C.x>>C.y>>D.x>>D.y;
+        ref.push_back(A);
+        ref.push_back(B);
+        ref.push_back(C);
+        ref.push_back(D);
+        int miny = 10000000;
+        int minx = 10000000;
+        int flag = 0;
+        for(int j=0;j<4;j++){
+            if(ref[j].y<miny){
+                miny = ref[j].y;
+                minx = ref[j].x;
+                flag = j;
+            }else if (ref[j].y == miny && ref[j].x < minx){
+                miny = ref[j].y;
+                minx = ref[j].x;
+                flag = j;
+            }
+        }
+        origin = ref[flag];
+        swap(ref[0],ref[flag]);
+        sort(ref.begin()+1,ref.end(),cmp);
+        A = ref[0];
+        B = ref[1];
+        C = ref[2];
+        D = ref[3];
+        //判断90
+        Vector AB,BC,CD,DA;
+        AB.make(A,B);
+        BC.make(B,C);
+        CD.make(C,D);
+        DA.make(D,A);
+        double JA,JB,JC,JD;
+        JA = cosangle(AB,DA);
+        JB = cosangle(AB,BC);
+        JC = cosangle(BC,CD);
+        JD = cosangle(CD,DA);
+        double LA,LB,LC,LD;
+        LA = length(AB);
+        LB = length(BC);
+        LC = length(CD);
+        LD = length(DA);
+        cout<<"Case "<<cnt<<": ";
+        if(JA==0 &&  JB==0 &&  JC==0 && JD==0){
+            if(LA==LB && LB==LC && LC==LD && LD==LA){
+                cout<<"Square"<<endl;
+            }else{
+                cout<<"Rectangle"<<endl;
+            }
+        }else if(LA == LB && LB==LC && LC==LD && LD==LA){
+            cout<<"Rhombus"<<endl;
+        }else if(LA==LC && LB == LD){
+            cout<<"Parallelogram"<<endl;
+        }else if(cross(AB,CD) == 0 || cross(DA,BC) == 0){
+                cout<<"Trapezium"<<endl;
+        }else{
+            cout<<"Ordinary Quadrilateral"<<endl;
+        }
+    }
+    return 0;
+}
+```
+
+<h3 id="1.3"> UVA 11646 </h3>
+
+1 题意：
+
+造体育场，给定比例求长宽。。
+
+2 解法：
+
+还是缺乏高中数学知识 - -。。
+
+已知弦长a，半径R，求弧长l的公式：
+
+$$
+l = 2Rarcsin(\frac{a}{2R})
+$$
+
+3 坑：
+
+一如既往地只要题目简单就会卡在输入输出上。。。搞了好久。。
+
+4 代码：
+
+```cpp
+#include <iostream>
+#include <cmath>
+#include <algorithm>
+#include <vector>
+#include <string>
+#include <sstream>
+
+using namespace std;
+
+int main(void){
+    double a,b;
+    int cnt = 0;
+    string c;
+    while(getline(cin,c)){
+        stringstream ss(c);
+        ss>>a;
+        cnt++;
+        char t;
+        ss>>t;
+        ss>>b;
+        double x = 400.0/(2.0*sqrt(a*a+b*b)*atan(b/a)+2.0*a);
+        printf("Case %d: %.10lf %.10lf\n",cnt,a*x,b*x);
+    }
+    return 0;
+}
+```
+
+<h2 id="2"> 2 二维几何计算 </h2>
+
+<h3 id="2.1"> UVA11178 </h3>
+
+1 题意
+
+有一个数学定理。。。角的三等分线相交出来的一个三角形是一个等边三角形。。。
+
+其实这道题和这个等边三角形并没有什么关系。。
+
+2 题解
+
+因为点来的方法都一样，所以只要写出来一个函数就ok。。。怎么求这个点呢？
+
+先求出一个大三角形的角，然后求三分之一角度用底边旋转出来，就可以等到这条边然后再用另一边同样的方法转出来另一条线，两个相交的交点就是小三角形的一个点。。
+
+3 模板
+
+前面没有出现的就是怎么样旋转一个向量一定的角度得到另一个向量。。又是高中数学问题
+
+公式就不写了。。直接给函数吧。。
+
+```cpp
+Vector Rotate(Vector a,double rad){
+    return (Vector){a.x*cos(rad)-a.y*sin(rad),a.x*sin(rad)+a.y*cos(rad)};
+}
+```
+
+4 代码
+
+因为和前面几题并在一起写了。。。所以应该会有很多冗余的函数。。
+
+```cpp
+#include <iostream>
+#include <cmath>
+#include <algorithm>
+#include <vector>
+#include <string>
+#include <sstream>
+
+using namespace std;
+
+
+struct Point{
+    double x,y;
+};
+struct Vector{
+    double x,y;
+    void make(Point a,Point b){
+        x = b.x - a.x;
+        y = b.y - a.y;
+    }
+};
+
+double cross(Vector a,Vector b){
+    return a.x*b.y - a.y*b.x;
+}
+
+double intimes(Vector a,Vector b){
+    return a.x*b.x + a.y*b.y;
+}
+
+double length(Vector a){
+    return sqrt(a.x*a.x + a.y*a.y);
+}
+Point crosspoint(Vector a,Vector b,Point af,Point bf){
+    Vector u;
+    u.make(bf,af);
+    double t = cross(b,u)/cross(a,b);
+    Point k;
+    k.x = af.x + t * a.x;
+    k.y = af.y + t * a.y;
+    return k;
+}
+
+double distance(Point a,Point b){
+    return sqrt((b.x-a.x)*(b.x-a.x)+(b.y-a.y)*(b.y-a.y));
+}
+
+double cosangle(Vector a,Vector b){
+    return intimes(a,b)/(length(a)*length(b));
+}
+Point origin;
+bool cmp(Point a,Point b){
+    Vector A,B;
+    A.make(origin, a);
+    B.make(origin, b);
+    return cross(A,B)<0;
+}
+
+double PTOL(Point p,Point a,Point b){
+    Vector v1,v2;
+    v1.make(a,b);
+    v2.make(a,p);
+    return fabs(cross(v1,v2)/length(v1));
+}
+//将向量逆时针旋转弧度为a的角度
+Vector Rotate(Vector a,double rad){
+    return (Vector){a.x*cos(rad)-a.y*sin(rad),a.x*sin(rad)+a.y*cos(rad)};
+}
+
+Point GETCROSS(Point A,Point B,Point C){
+    Vector v1,tmp;
+    v1.make(B,C);
+    tmp.make(B,A);
+    double rad = acos(cosangle(tmp,v1));
+    v1 = Rotate(v1,rad/3.0);
+
+    Vector v2;
+    v2.make(C,B);
+    tmp.make(C,A);
+    double rad2 = acos(cosangle(tmp,v2));
+    v2 = Rotate(v2,-rad2/3.0);
+    return crosspoint(v1,v2,B,C);
+}
+
+int main(void){
+    int T;
+    cin>>T;
+    while(T--){
+        Point A,B,C;
+        cin>>A.x>>A.y>>B.x>>B.y>>C.x>>C.y;
+        Point D,E,F;
+        D = GETCROSS(A,B,C);
+        E = GETCROSS(B,C,A);
+        F = GETCROSS(C,A,B);
+        printf("%.6lf %.6lf %.6lf %.6lf %.6lf %.6lf\n",D.x,D.y,E.x,E.y,F.x,F.y);
+    }
+    return 0;
+}
+
+```
+
+<h3 id="2.2"> UVA1342 </h3>
+
+1 题意：
+
+第一个端点和最后一个端点永远是一样重合的，一笔画划回来，问应该把这个平面变成了几块？
+
+2 思路：
+
+正如书上所言，要直接用死方法做算一块块会很麻烦，所以。。。又要知道一些『高级的』定理才能完成了。。。
+
+这里是**欧拉定理**： _设平面图的顶点数、边数和面数分别为V,E,F，那么V+F-E=2_
+
+一条边的定义是指顶点到顶点，顶点就是所有线的交点，就算共线也算。
+
+所以题例中给出那个图，最长的那条边其实贡献了5个顶点和4条边。。。
+
+这个定理的证明么。。。网上找吧，这里地方太小写不下~
+
+然后应该就容易解决了。。。
+
+还有需要注意的就是三线共点的情况出现的话，可能会在一个集合内出现两次一样的点，就需要去重。。
+
+3 奇技淫巧
+
+**_这个版块就用来介绍STL里一些奇怪的函数（轮子们）。。。_**
+
+unique函数。。。能够在数组或者STL容器中去重，给出的和sort差不多，不过最后一个判别函数需要给出的就是怎么判别相等。。。
+
+```markdown
+（书上这里缺省了这个cmp函数。。。因为他在point这个类里定义了"=="操作符，这里就可以省。。前面的sort函数也是，定义了『<』。。如果前面没定义一定要加cmp函数。。否则交上去会出现乱七八糟的CE。。。（别问我为什么知道。。。））
+```
+
+4 代码
+
+（和前面一样。。。。因为有很多轮子可以用，所以可能会有很多冗余函数。。）
+
+```cpp
+#include <iostream>
+#include <cmath>
+#include <algorithm>
+#include <vector>
+#include <string>
+#include <sstream>
+#include <cstring>
+
+using namespace std;
+
+const int maxn = 300+10;
+
+struct Point{
+    double x,y;
+};
+
+Point P[maxn],V[maxn*maxn];
+const double eps = 1e-10;
+//判断符号
+int dcmp(double x){
+    if(fabs(x)<eps) return 0;
+    else return x<0?-1:1;
+}
+struct Vector{
+    double x,y;
+    void make(Point a,Point b){
+        x = b.x - a.x;
+        y = b.y - a.y;
+    }
+};
+
+double cross(Vector a,Vector b){
+    return a.x*b.y - a.y*b.x;
+}
+
+double intimes(Vector a,Vector b){
+    return a.x*b.x + a.y*b.y;
+}
+
+double length(Vector a){
+    return sqrt(a.x*a.x + a.y*a.y);
+}
+Point crosspoint(Vector a,Vector b,Point af,Point bf){
+    Vector u;
+    u.make(bf,af);
+    double t = cross(b,u)/cross(a,b);
+    Point k;
+    k.x = af.x + t * a.x;
+    k.y = af.y + t * a.y;
+    return k;
+}
+
+double distance(Point a,Point b){
+    return sqrt((b.x-a.x)*(b.x-a.x)+(b.y-a.y)*(b.y-a.y));
+}
+
+double cosangle(Vector a,Vector b){
+    return intimes(a,b)/(length(a)*length(b));
+}
+Point origin;
+bool cmp(Point a,Point b){
+    Vector A,B;
+    A.make(origin, a);
+    B.make(origin, b);
+    return cross(A,B)<0;
+}
+
+double PTOL(Point p,Point a,Point b){
+    Vector v1,v2;
+    v1.make(a,b);
+    v2.make(a,p);
+    return fabs(cross(v1,v2)/length(v1));
+}
+//将向量逆时针旋转弧度为a的角度
+Vector Rotate(Vector a,double rad){
+    return (Vector){a.x*cos(rad)-a.y*sin(rad),a.x*sin(rad)+a.y*cos(rad)};
+}
+
+//判断是否正规相交（不在端点初相交）
+bool SegmentProperIntersection(Point A,Point B,Point C,Point D){
+    Vector AB,AC,AD,CA,CD,CB;
+    AB.make(A, B);
+    AC.make(A, C);
+    AD.make(A, D);
+    CA.make(C, A);
+    CD.make(C, D);
+    CB.make(C, B);
+    double c1 = cross(AB, AC),c2 = cross(AB, AD);
+    double c3 = cross(CD, CA),c4 = cross(CD, CB);
+    return dcmp(c1)*dcmp(c2)<0 && dcmp(c3)*dcmp(c4)<0;
+}
+
+//判断是否第一个点是否在后两个点的线段上
+bool Onsegment(Point a,Point b,Point c){
+    Vector BA,CA;
+    BA.make(a, b);
+    CA.make(a, c);
+    return dcmp(cross(BA, CA)) == 0 && dcmp(intimes(BA, CA))<0;
+}
+int main(void){
+    int n,kase = 0;
+    while(scanf("%d",&n)!=EOF){
+        memset(V, 0,sizeof(V));
+        memset(P, 0, sizeof(P));
+        if(n==0) break;
+        for(int i=0;i<n;i++){
+            scanf("%lf%lf",&P[i].x,&P[i].y);
+            V[i] = P[i];
+        }
+        n--;  //去掉最后一个点不计算
+        int c = n,e = n;
+        for(int i = 0;i<n;i++){
+            for(int j=i+1;j<n;j++){
+                //求每条边之间的交点
+                if(SegmentProperIntersection(P[i],P[i+1],P[j],P[j+1])){
+                    Vector a,b;
+                    a.make(P[i],P[i+1]);
+                    b.make(P[j],P[j+1]);
+                    V[c++] = crosspoint(a, b, P[i], P[j]);
+                }
+            }
+        }
+        sort(V,V+c,[](Point a, Point b){
+            return a.x < b.x || (a.x==b.x && a.y<b.y);
+        });
+        c = (int)(unique(V,V+c,[](Point a, Point b){
+            return dcmp(a.x-b.x)==0 && dcmp(a.y-b.y)==0;
+        })-V);  //去重
+        //求边数
+        for(int i=0;i<c;i++){
+            for(int j=0;j<n;j++){
+                if(Onsegment(V[i],P[j], P[j+1])) e++;
+            }
+        }
+        printf("Case %d: There are %d pieces.\n",++kase,e+2-c);
+    }
+    return 0;
+}
+```
+
+<h3 id="2.3"> UVA11796 </h3>
+
+1 题意
+
+这道题蛮复杂的。。。就是两只狗赛跑，同时出发同时到达，每只狗呢经过的点不一样。。（起点终点可能不同，在后面的数据中可以看出来）。问的是他们在跑的时候最长和最短距离是多少。
+
+2 思路
+
+把狗简化成A,B两个点。。
+
+首先考虑一个『简化版』的，如果A,B均各自在一条直线上移动，那么可以想到的就是如果A一开始不动，B开始动，那么整道题就可以被简化成A点到B点移动直线上的最短最长距离。
+
+然后再来看如果是在折线上的话，就模拟整个过程，A,B开始走，在各自经过第一个转折点之前，所有的情况都和简化版是一样的，只要根据谁先到各自的下一个转折点的时间和距离来计算最大最小距离，然后以此类推，都各自去计算在同一个时段内，大家距离下一个转折点的时候的情况。时间取出到下一个转折点快的那个，然后比较取最大最小。
+
+3 奇技淫巧
+
+double数的话，用printf("%.0f")可以四舍五入 （这道题是可以，其他地方是否可以待考）。
+
+4 注意点
+
+点到线段距离要考虑各种各样的情况，不能直接取垂线。
+
+计算几何的代码很长。。注意细节
+
+5 代码
+
+```cpp
+#include <iostream>
+#include <cmath>
+#include <algorithm>
+#include <vector>
+#include <string>
+#include <sstream>
+#include <cstring>
+
+using namespace std;
+
+struct Point{
+    double x,y;
+};
+
+
+const double eps = 1e-10;
+//判断符号
+int dcmp(double x){
+    if(fabs(x)<eps) return 0;
+    else return x<0?-1:1;
+}
+struct Vector{
+    double x,y;
+    Vector make(Point a,Point b){
+        x = b.x - a.x;
+        y = b.y - a.y;
+        return (Vector){x,y};
+    }
+};
+
+double cross(Vector a,Vector b){
+    return a.x*b.y - a.y*b.x;
+}
+
+double intimes(Vector a,Vector b){
+    return a.x*b.x + a.y*b.y;
+}
+
+double length(Vector a){
+    return sqrt(a.x*a.x + a.y*a.y);
+}
+Point crosspoint(Vector a,Vector b,Point af,Point bf){
+    Vector u;
+    u.make(bf,af);
+    double t = cross(b,u)/cross(a,b);
+    Point k;
+    k.x = af.x + t * a.x;
+    k.y = af.y + t * a.y;
+    return k;
+}
+
+double distance(Point a,Point b){
+    return sqrt((b.x-a.x)*(b.x-a.x)+(b.y-a.y)*(b.y-a.y));
+}
+
+double cosangle(Vector a,Vector b){
+    return intimes(a,b)/(length(a)*length(b));
+}
+Point origin;
+bool cmp(Point a,Point b){
+    Vector A,B;
+    A.make(origin, a);
+    B.make(origin, b);
+    return cross(A,B)<0;
+}
+
+double PTOL(Point p,Point a,Point b){
+    Vector v1,v2,v3;
+    v1.make(a,b);
+    if(dcmp(v1.x-0) == 0&& dcmp(v1.y-0) == 0) return fabs(distance(p,a));
+    v2.make(a,p);
+    v3.make(b,p);
+    if(dcmp(intimes(v1, v2))<0) return length(v2);
+    else if(dcmp(intimes(v1, v3))>0) return length(v3);
+    return fabs(cross(v1,v2)/length(v1));
+}
+//将向量逆时针旋转弧度为a的角度
+Vector Rotate(Vector a,double rad){
+    return (Vector){a.x*cos(rad)-a.y*sin(rad),a.x*sin(rad)+a.y*cos(rad)};
+}
+
+//判断是否正规相交（不在端点初相交）
+bool SegmentProperIntersection(Point A,Point B,Point C,Point D){
+    Vector AB,AC,AD,CA,CD,CB;
+    AB.make(A, B);
+    AC.make(A, C);
+    AD.make(A, D);
+    CA.make(C, A);
+    CD.make(C, D);
+    CB.make(C, B);
+    double c1 = cross(AB, AC),c2 = cross(AB, AD);
+    double c3 = cross(CD, CA),c4 = cross(CD, CB);
+    return dcmp(c1)*dcmp(c2)<0 && dcmp(c3)*dcmp(c4)<0;
+}
+
+//判断是否第一个点是否在后两个点的线段上
+bool Onsegment(Point a,Point b,Point c){
+    Vector BA,CA;
+    BA.make(a, b);
+    CA.make(a, c);
+    return dcmp(cross(BA, CA)) == 0 && dcmp(intimes(BA, CA))<0;
+}
+
+const int maxn = 60;
+int T,A,B;
+Point P[maxn],Q[maxn];
+double Min,Max;
+
+void update(Point P,Point A,Point B){
+    Vector AB,PA,PB;
+    AB.make(A, B);
+    PA.make(A, P);
+    PB.make(B, P);
+    Min = min(Min,PTOL(P,A,B));
+    Max = max(Max,length(PA));
+    Max = max(Max,length(PB));
+}
+int main(void){
+    scanf("%d",&T);
+    for(int kase = 1;kase<=T;kase++){
+        scanf("%d%d",&A,&B);
+        for(int i=0;i<A;i++) scanf("%lf%lf",&P[i].x,&P[i].y);
+        for(int i=0;i<B;i++) scanf("%lf%lf",&Q[i].x,&Q[i].y);
+
+        double LenA = 0,LenB = 0;
+        Vector tmp;
+        for(int i=0;i<A-1;i++){tmp.make(P[i], P[i+1]);LenA+=length(tmp);}
+        for(int i=0;i<B-1;i++){tmp.make(Q[i], Q[i+1]);LenB+=length(tmp);}
+
+        int SA=0,SB=0;
+        Point Pa = P[0],PB = Q[0];
+        Min = 1e9,Max = -1e9;
+        while(SA<A-1 && SB<B-1){
+            Vector tmp;
+            double LA = length(tmp.make(Pa, P[SA+1]));
+            double LB = length(tmp.make(PB, Q[SB+1]));
+            double T = min(LA/LenA,LB/LenB);
+            tmp.make(Pa, P[SA+1]);
+            Vector Va = (Vector){tmp.x/LA*(T*LenA),tmp.y/LA*(T*LenA)};
+            tmp.make(PB, Q[SB+1]);
+            Vector Vb = (Vector){tmp.x/LB*(T*LenB),tmp.y/LB*(T*LenB)};
+            update(Pa, PB, (Point){PB.x+Vb.x-Va.x,PB.y+Vb.y-Va.y});  //A不动，B动
+            Pa = (Point){Pa.x+Va.x,Pa.y+Va.y};
+            PB = (Point){PB.x+Vb.x,PB.y+Vb.y};
+            if(dcmp(Pa.x-P[SA+1].x) == 0 && dcmp(Pa.y-P[SA+1].y)==0) SA++;
+            if(dcmp(PB.x-Q[SB+1].x) == 0 && dcmp(PB.y-Q[SB+1].y)==0) SB++;
+        }
+        printf("Case %d: %.0f\n",kase,Max-Min);
+    }
+    return 0;
+}
+
+```
+
+<h2 id="3"> 3 二维几何算法 </h2>
+
+<h3 id="3.1"> UVA 10652 </h3>
+
+1 题意
+
+纯粹的求凸包，最后加一个求面积就ok。。。
+
+2 坑
+
+告诉你的旋转角度是角度制，要换成弧度制。。。注意要加个负号，否则会错。。。
+
+3 代码
+
+凸包的求法和一般的G算法不一样。。。感觉用起来比那个方便，不过他直接省略了共线的凸包点
+
+有冗余函数
+
+```cpp
+#include <iostream>
+#include <cmath>
+#include <algorithm>
+#include <vector>
+#include <string>
+#include <sstream>
+#include <cstring>
+
+using namespace std;
+
+struct Point{
+    double x,y;
+
+};
+
+
+
+
+const double eps = 1e-5;
+//判断符号
+int dcmp(double x){
+    if(fabs(x)<eps) return 0;
+    else return x<0?-1:1;
+}
+struct Vector{
+    double x,y;
+    Vector make(Point a,Point b){
+        x = b.x - a.x;
+        y = b.y - a.y;
+        return (Vector){x,y};
+    }
+};
+
+Point operator + (Point A,Vector B){
+    return (Point){A.x+B.x,A.y+B.y};
+}
+struct Circle{
+    Point c;
+    double r;
+//    Circle();
+//    Circle(Point c,double r):c(c),r(r){}
+    Point point(double a){
+        return (Point){c.x+cos(a)*r,c.y+sin(a)*r};
+    }
+};
+
+
+
+double cross(Vector a,Vector b){
+    return a.x*b.y - a.y*b.x;
+}
+
+double intimes(Vector a,Vector b){
+    return a.x*b.x + a.y*b.y;
+}
+
+double length(Vector a){
+    return sqrt(a.x*a.x + a.y*a.y);
+}
+Point crosspoint(Vector a,Vector b,Point af,Point bf){
+    Vector u;
+    u.make(bf,af);
+    double t = cross(b,u)/cross(a,b);
+    Point k;
+    k.x = af.x + t * a.x;
+    k.y = af.y + t * a.y;
+    return k;
+}
+
+double distance(Point a,Point b){
+    return sqrt((b.x-a.x)*(b.x-a.x)+(b.y-a.y)*(b.y-a.y));
+}
+
+double cosangle(Vector a,Vector b){
+    return intimes(a,b)/(length(a)*length(b));
+}
+Point origin;
+bool cmp(Point a,Point b){
+    Vector A,B;
+    A.make(origin, a);
+    B.make(origin, b);
+    return cross(A,B)<0;
+}
+
+double PTOL(Point p,Point a,Point b){
+    Vector v1,v2,v3;
+    v1.make(a,b);
+    if(dcmp(v1.x-0) == 0&& dcmp(v1.y-0) == 0) return fabs(distance(p,a));
+    v2.make(a,p);
+    v3.make(b,p);
+    if(dcmp(intimes(v1, v2))<0) return length(v2);
+    else if(dcmp(intimes(v1, v3))>0) return length(v3);
+    return fabs(cross(v1,v2)/length(v1));
+}
+//将向量逆时针旋转弧度为a的角度
+Vector Rotate(Vector a,double rad){
+    return (Vector){a.x*cos(rad)-a.y*sin(rad),a.x*sin(rad)+a.y*cos(rad)};
+}
+
+//判断是否正规相交（不在端点初相交）
+bool SegmentProperIntersection(Point A,Point B,Point C,Point D){
+    Vector AB,AC,AD,CA,CD,CB;
+    AB.make(A, B);
+    AC.make(A, C);
+    AD.make(A, D);
+    CA.make(C, A);
+    CD.make(C, D);
+    CB.make(C, B);
+    double c1 = cross(AB, AC),c2 = cross(AB, AD);
+    double c3 = cross(CD, CA),c4 = cross(CD, CB);
+    return dcmp(c1)*dcmp(c2)<0 && dcmp(c3)*dcmp(c4)<0;
+}
+
+//判断是否第一个点是否在后两个点的线段上
+bool Onsegment(Point a,Point b,Point c){
+    Vector BA,CA;
+    BA.make(a, b);
+    CA.make(a, c);
+    return dcmp(cross(BA, CA)) == 0 && dcmp(intimes(BA, CA))<0;
+}
+
+
+
+
+bool compare(Point p1,Point p2){
+    return p1.x<p2.x || (dcmp(p1.x-p2.x)==0 && p1.y<p2.y);
+}
+Point ToConvexHull[10000];
+Point CH[10000];
+void cle(){
+    memset(ToConvexHull,0, sizeof(ToConvexHull));
+    memset(CH,0, sizeof(CH));
+}
+// 凸包去除了共線上的點
+int ConvexHull(int n){
+    sort(ToConvexHull,ToConvexHull+n,compare);
+    int m = 0;
+    Vector v1,v2;
+    for(int i = 0;i<n;i++){
+        while(m>1 && cross(v1.make(CH[m-2],CH[m-1]), v2.make(CH[m-2], ToConvexHull[i]))<=0) m--;
+        CH[m++] = ToConvexHull[i];
+    }
+    int k = m;
+    for(int i = n-2;i>=0;i--){
+        while(m>k && cross(v1.make(CH[m-2], CH[m-1]), v2.make(CH[m-2], ToConvexHull[i]))<=0) m--;
+        CH[m++] = ToConvexHull[i];
+    }
+    if(n>1) m--;
+    return m;
+}
+
+double PolygonArea(Point *p,int n){
+    double area =  0;
+    Vector v1,v2;
+    for(int i = 1;i<n-1;i++){
+        area += cross(v1.make(p[0], p[i]), v2.make(p[0], p[i+1]));
+    }
+    return fabs(area/2);
+}
+
+int main(void){
+    //freopen("/Users/mouizumi/Desktop/TEXT.txt", "r", stdin);
+    int T;
+    scanf("%d",&T);
+    while(T--){
+        int n,pc = 0;
+        double areal = 0;
+        scanf("%d",&n);
+        for(int i=0;i<n;i++){
+            double x,y,w,h,j,ang;
+            scanf("%lf%lf%lf%lf%lf",&x,&y,&w,&h,&j);
+            Point o;
+            o.x = x;
+            o.y = y;
+            ang = -j/180*M_PI;
+
+            ToConvexHull[pc++] = o + Rotate((Vector){-w/2,-h/2}, ang);
+            ToConvexHull[pc++] = o + Rotate((Vector){w/2,-h/2}, ang);
+            ToConvexHull[pc++] = o + Rotate((Vector){-w/2,h/2}, ang);
+            ToConvexHull[pc++] = o + Rotate((Vector){w/2,h/2}, ang);
+            areal += w*h;
+        }
+        int m = ConvexHull(pc);
+        double area2 = PolygonArea(CH,m);
+        printf("%.1lf %%\n",areal*100/area2);
+    }
+    return 0;
+}
+
+```
+
+<h3 id="3.2"> UVA 11168 </h3>
+
+1 题意
+
+抛开现象看本质就是有一些点，求一条直线，让所有的点在这一条直线的一侧，然后所有点到这条线的距离之和最小，输出的数据是平均距离。
+
+2 解法
+
+用所给的点求一个凸包，然后可以得到凸包，要求这条直线，为了让直线在这个凸包的一侧距离又最小，不妨就让这条直线就是凸包的一条边。
+
+枚举所有的边，并且去求所有点距离这条边的距离，取小的。
+
+**如果只有2个点，那么他们的最小距离直接就是0，因为无法求凸包！**
+
+3 技巧
+
+利用点到线的距离公式，可以巧妙的解决所有点到直线距离。
+
+$$
+Ax+By+C = 0 点(x_0,y_0),d= \frac{|Ax_0+By_0+c|}{\sqrt{A^2+B^2}}
+$$
+
+因为这里所有的点都在这条直线的一侧，所以可以直接用之前就在输入的时候就预算好的x，y的和值就可以得到距离和。
+
+两点构成的直线，化成一般式
+
+$$
+\frac{x-x_1}{x_2-x_1}= \frac{y-y_1}{y_2-y_1}  \Rightarrow  (y_2-y_1)x+(x_1-x2)y+(x_2y_1-x_1y_2) = 0
+$$
+
+不妨设x的所有和为X,y的所有和为Y，n为点的个数，那么式子就可以有：
+
+$$
+\frac{|A(X-x_1-x_2)+B(Y-y_1-y_2)+(n-2)C|}{\sqrt{A^2+B^2}}
+$$
+
+4 代码
+
+好吧好吧。。我删掉了冗余函数
+
+```cpp
+#include <iostream>
+#include <cmath>
+#include <algorithm>
+#include <vector>
+#include <string>
+#include <sstream>
+#include <cstring>
+
+using namespace std;
+
+struct Point{
+    double x,y;
+
+};
+const double eps = 1e-5;
+//判断符号
+int dcmp(double x){
+    if(fabs(x)<eps) return 0;
+    else return x<0?-1:1;
+}
+struct Vector{
+    double x,y;
+    Vector make(Point a,Point b){
+        x = b.x - a.x;
+        y = b.y - a.y;
+        return (Vector){x,y};
+    }
+};
+
+Point operator + (Point A,Vector B){
+    return (Point){A.x+B.x,A.y+B.y};
+}
+
+double cross(Vector a,Vector b){
+    return a.x*b.y - a.y*b.x;
+}
+
+double intimes(Vector a,Vector b){
+    return a.x*b.x + a.y*b.y;
+}
+
+
+bool compare(Point p1,Point p2){
+    return p1.x<p2.x || (dcmp(p1.x-p2.x)==0 && p1.y<p2.y);
+}
+Point ToConvexHull[10000];
+Point CH[10000];
+void cle(){
+    memset(ToConvexHull,0, sizeof(ToConvexHull));
+    memset(CH,0, sizeof(CH));
+}
+// 去除了共線上的點
+int ConvexHull(int n){
+    sort(ToConvexHull,ToConvexHull+n,compare);
+    int m = 0;
+    Vector v1,v2;
+    for(int i = 0;i<n;i++){
+        while(m>1 && cross(v1.make(CH[m-2],CH[m-1]), v2.make(CH[m-2], ToConvexHull[i]))<=0) m--;
+        CH[m++] = ToConvexHull[i];
+    }
+    int k = m;
+    for(int i = n-2;i>=0;i--){
+        while(m>k && cross(v1.make(CH[m-2], CH[m-1]), v2.make(CH[m-2], ToConvexHull[i]))<=0) m--;
+        CH[m++] = ToConvexHull[i];
+    }
+    if(n>1) m--;
+    return m;
+}
+
+int main(void){
+    freopen("/Users/mouizumi/Desktop/TEXT.txt", "r", stdin);
+    int T;
+    scanf("%d",&T);
+    int kase = 0;
+    while(T--){
+        cle();
+        int n;
+        scanf("%d",&n);
+        long long allx=0,ally=0;
+        for(int j=0;j<n;j++){
+            cin>>ToConvexHull[j].x>>ToConvexHull[j].y;
+            allx+=ToConvexHull[j].x;
+            ally+=ToConvexHull[j].y;
+        }
+        double mini = 10000000000;
+        if(n>2){
+        int m = ConvexHull(n);
+        for(int j=0;j<m;j++){
+            Point e,f;
+            e = CH[j];
+            f = CH[(j+1)%m];
+            double A,B,C;
+            A = f.y - e.y;
+            B = e.x - f.x;
+            C = f.x * e.y - e.x * f.y;
+            double Q = sqrt(A*A+B*B);
+            double dis = fabs((A*(allx - e.x - f.x)+B*(ally - e.y - f.y)+ (n-2)*C))/Q;
+            if(dcmp(dis - mini)<0) mini = dis;
+        }
+        }
+        else{
+            mini = 0.00;
+        }
+        printf("Case #%d: %.3lf\n",++kase,mini/n);
+    }
+    return 0;
+}
+
+
+```

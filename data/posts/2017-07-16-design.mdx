@@ -1,0 +1,62 @@
+---
+layout: post
+title: 课程设计前端踩坑记录
+date: 2017-07-16 00:03:36 +0800
+category: 技术
+tags: [课程设计, JavaScript, 前端]
+---
+
+使用vue框架完成这个课程设计（第一次使用）已经完成了好长时间了，总结了一下使用框架的10条踩坑经验。
+（这个老师的课就是个坑，给分超低。）
+
+课程设计的代码全部保存在github上，地址：[GitHub - MQ-380/Manager: First try on Vue](https://github.com/MQ-380/Manager)
+（webproject为所有前端部分）
+
+## 数据的保存与传输
+1. localstorage和sessionstorage的区分
+ 前者会永久存储，即使关闭浏览器也不会消失。后者只要关闭这个对话就会不在保存，比较适合于简单的登录验证。
+可以用原生的JavaScript语句进行存储和读取。
+
+2. vuex只能保存一个状态用来跨页面传输数据，并没有保存数据的功能。
+
+3. vue中的数据传递：
+子组件 -> 父组件  dispatch
+父组件 -> 子组件  props(子组件中设置）
+具体的可以参考以下链接中的文章：
+[Vue.js组件 | Wu Xu](https://blog.wuxu92.com/Vue-js-components/)
+
+4. 组件在挂载之前获取数据可以再created方法中写入获取数据的语句，参考：[数据获取 · GitBook](https://router.vuejs.org/zh-cn/advanced/data-fetching.html)
+
+5. 异步的坑：
+因为ajax异步的特性，不会等待获取数据结束后再执行后续的方法，所以应该把后续的操作和获取数据的语句写在一个方法块中，可以保证在View的模块中最终可以获取到数据。
+
+Ex：
+在查询的地方时候通过id查姓名、一定要把后续步骤含到访问http后的then中、如果拆开写成调用方法的话、会一边访问、一边又执行到后续语句，最终导致在向view中传递参数的时候其实根本没有获取到数据。
+
+## JavaScript语言特性
+6. 遍历数组的时候可以用forEach这个方法，但是this指针在这个方法中会改变指向，所以使用要慎重，遇到这个问题或者要遍历一个对象的时候可以选用for...in...
+Ex: 遍历对象中的所有属性for prop in obj   (prop -> 属性     obj[prop] -> 值）
+
+7. 转变日期的格式：toLocaleDateString() 
+
+8. 判断undefined会有坑，具体参见： [JavaScript判断变量是否为undefined两种方式差异 - snandy - 博客园](https://www.cnblogs.com/snandy/archive/2011/06/17/2083481.html)
+
+9. 判断字符串是否可以转变成数字：
+isNan(Number(a))   true -> 不可以   false -> 可以
+
+## 前后端交互
+
+10. 与Spring框架交互用JSON数据，参数只要写在url之后就可以。ajax跨域问题解决： tomcat的web.xml中改写加入
+```xml
+ <filter>
+    <filter-name>CorsFilter</filter-name>
+    <filter-class>org.apache.catalina.filters.CorsFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>CorsFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+```
+
+
+以上。

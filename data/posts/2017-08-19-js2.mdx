@@ -1,0 +1,491 @@
+---
+layout: post
+title: JavaScript精进之路  — 异步的实现（上）
+date: 2017-08-19 00:03:36 +0800
+category: 技术
+tags: [javascript, 前端, 异步]
+---
+
+> 要帶著問題學,活學活用,學用結合,急用先學,立竿見影,在「用」字上狠下功夫。  
+>  — 林副主席
+
+题词是林副主席的语录，很有感触，特记于此。
+
+废话少说。
+这是这个专题的第二部分内容，异步。主要总结了《你不知道的JavaScript（中卷）》中有关于异步的内容。显然一下子写完三个部分的内容不太可能，下篇会在不久之后放出。
+由于前人之述备矣，所以有些地方会引用它山之石，它山之石可以攻玉嘛。 🙈
+
+## 什么是异步
+
+首先明确，JavaScript是一种单线程语言，不会出现多线程。
+
+1. 【异步的核心】程序中现在运行部分和将来运行部分的关系就是异步编程的核心。简单来讲，如果程序中出现了一部分要在现在运行（顺序同步执行），一部分要在将来运行（可能是设置了timeout也可能是一个ajax的异步调用后执行的函数），那么两者之间的关系的构建就构成了异步编程。
+
+2. 【事件循环】相当于一个永远执行的while(true)循环，循环的每一轮称为一个tick。对于每个tick而言，如果队列中有等待事件，那么从队列中拿下这个事件执行。队列中事件就是注册的异步调用函数。
+   由于事件循环的原因，setTimeout只是在timeout的时间后将函数注册到事件循环中，因为有被其他任务阻塞的可能，所以其时间不一定准确。setInterval同理可得。
+   setTimeout(…,0)可以进行异步调动，将函数放在事件队列循环的末尾，是一种hack的方法。
+   具体可以参阅以下blog：[你所不知道的setInterval | 晚晴幽草轩](https://www.jeffjade.com/2016/01/10/2016-01-10-javascript-setInterval/)
+
+3. 【任务】Promise的then是基于任务的。任务和事件循环的区别，可以理解为任务代表的异步函数可以插队进入当前事件之后。所以从理论上来说，任务循环（job loop）可能导致无限循环（一个任务添加另一个不需要排队的任务，例如Promise中then的无限连接）使得无法进入到下一个tick中。
+
+EX 事件循环和任务的感性认识
+
+```javascript
+(function test() {
+  setTimeout(function () {
+    console.log(4);
+  }, 0);
+  new Promise(function executor(resolve) {
+    console.log(1);
+    for (var i = 0; i < 10000; i++) {
+      i == 9999 && resolve();
+    }
+    console.log(2);
+  }).then(function () {
+    console.log(5);
+  });
+  console.log(3);
+})();
+```
+
+输出是 1 2 3 5 4 而非 1 2 3 4 5
+这就说明了Promise决议之后，先执行了then的这个任务（job），这个then没有进入事件循环中排队，因为如果排队，应该会在setTimeout这个先注册的function之后调用。所以then的任务队列的优先级高于事件循环。并且磁力还说明了Promise的决议过程是同步执行的。
+
+具体的原理说明：
+https://github.com/creeperyang/blog/issues/21
+
+4. 【异步交互协调】有时会由于两个ajax调用的先后顺序（或者其他操作的先后顺序）的原因会导致运行结果的不同，为了控制进程的执行，有两种控制的模式和两种简单的方式：
+   首先是门：这个可以控制两个函数都完成之后才进行下一步工作，条件控制条件为if(a && b)
+   第二种是竞态，也可称为门闩。就是两个函数只有一个能够被调用，另一个会被忽略，其控制条件是设置一个undefined的变量a，调用后设为有值，并且判断if(!a)
+
+## 异步的基础模式 — 回调（callback）
+
+回调可以说是JavaScript的基础了，这里不讲回调的好处，只有回调的几个明显缺点（否则则么显现出后面的进化呢（笑））：
+
+1. 【回调函数】回调函数封装了程序的延续（continuation）。回调函数是处理JavaScript异步逻辑最基础的方法，但也有着各种的缺点。
+
+2. 【嵌套回调和链式回调（回调地狱）】
+   有下列代码：
+
+```javascript
+//《你不知道的JavaScript（中卷）》
+listen("click", function handler(evt) {
+  setTimeout(function request() {
+    ajax("http://some.url.1", function response(text) {
+      if (text == "hello") {
+        handler();
+      } else if (text == "world") {
+        request();
+      }
+    });
+  }, 500);
+});
+```
+
+这是一个由三个函数嵌套在一起的链式回调，每个函数代表了一个异步序列。
+
+由于回调的特性，可能很难一下看出这个函数的执行逻辑（缺乏顺序性），所以又被称为回调地狱或者毁灭金字塔。
+
+【回调地狱的缺陷】：
+
+```javascript
+doA(function () {
+  doC();
+
+  doD(function () {
+    doF();
+  });
+
+  doE();
+});
+
+doB();
+```
+
+如果函数A和D是异步执行的，那么这个回调过程的执行步骤是A - F - B - C - E - D
+
+除了难以阅读以外，回调地狱真正的问题在于一旦指定了所有的可能时间和路径，代码就会变得十分复杂，无法维护和更新。因为一个进行的回调要是能够覆盖所有路径，可能会写上很多并行的回调函数，在代码中看起来可能会十分凌乱和难以调试维护。
+
+3. 【控制反转】这牵涉到异步程序设计的信任问题。
+
+控制反转就是程序执行的主动权从自己的手中交了出去。如果仅仅是简单的ajax调用，那么这个控制切换可能不会带来什么大问题。但如果将一个回调函数交给一个外部的API，因为无法查看的具体代码，所以可以看做是一个黑箱。这个黑箱导致问题是无法调试，不知道这个外部程序到底怎样调用了这个回调函数，是一次都没有，还是调用了很多次，亦或是比预想中过早过晚的调用，最终可能的后果就是程序执行的结果不如所愿。
+
+教科书一点的定义就是把自己程序一部分的执行控制交给了某个第三方，且与这个第三方之间没有一份明确表达的契约。
+
+因为回调没有机制来保障这个必然出现的控制反转的问题，这就成为了回调的最大问题，会导致信任链的完全断裂，是程序出错。
+
+回调函数必须遵守的原则就是：信任，但要核实。（Trust But Verify.）
+
+4. 【error-first风格】回调函数的第一个参数留给错误处理，如果成功第一个参数就置为false，否则为true。回调执行时先进行判断。
+   但是这个风格并没有完全解决信任的问题，如果同时成功和失败，就要另外写代码来处理。
+
+5. 【Zalgo】回调会有同步回调调用和异步回调调用。这样也会产生程序的运行问题，见下列代码：
+
+```javascript
+function result(data) {
+  console.log(a);
+}
+
+var a = 0;
+
+ajax("..pre-cached-url..", result);
+a++;
+```
+
+这端代码会有0（同步回调调用）还是1（异步回调调用）的结果就要看情况而定了
+对于可能同步调用也可能异步调用给出的回调函数的第三方工具而言，这个信任问题是明显的。虽然可以用臃肿的附加代码来解决，但并不优雅。
+
+这样的同步异步的混淆产生了另一条准则：
+永远要异步调用回调，即使只在事件的下一轮。
+（always invoke callbacks asynchronously, even if that's "right away" on the next turn of the event loop）
+
+## 异步的进化一 — Promise
+
+前面一部分已经描述到了回调函数的两个问题分别是：缺乏顺序性和缺乏可信任性。
+
+那么这部分的Promise主要用来解决了可信任性的问题。
+
+1. 【解决可信任问题的范式】不把程序的控制权交给第三方，而是希望第三方提供一个了解其任务何时结束的能力，然后由我们的代码来决定接下来做什么。
+
+2. 【未来值】A对于B有一个承诺，如果A给出了任务完成可以兑现承诺或者失败不能兑现承诺的值，那么这个值就称为未来值，简单而言就是要在未来才能确定的值，但有承诺保证这个值存在。
+
+由于未来值可能有两个可能，要么成功，要么失败。所以Promise值的then方法（在Promise值确定之后调用的函数）就可以接收两个参数，第一个为成功的话执行的函数，第二个为失败的话执行的函数。
+
+举个例子：
+
+把x和y相加，如果有一个值没有准备好，那就等待。一旦全部准备好就相加返回。
+
+为了统一处理将来和现在，就把他们全部变成未来值，就全部异步调用。
+
+回调模式下的代码：
+
+```javascript
+function add(getX, getY, cb) {
+  var x, y;
+  getX(function (xVal) {
+    x = xVal;
+    // both are ready?
+    if (y != undefined) {
+      cb(x + y); // send along sum
+    }
+  });
+  getY(function (yVal) {
+    y = yVal;
+    // both are ready?
+    if (x != undefined) {
+      cb(x + y); // send along sum
+    }
+  });
+}
+
+// `fetchX()` and `fetchY()` are sync or async
+// functions
+add(fetchX, fetchY, function (sum) {
+  console.log(sum); // that was easy, huh?
+});
+```
+
+Promise模式下的代码：
+
+```javascript
+function add(xPromise, yPromise) {
+  // `Promise.all([ .. ])` takes an array of promises,
+  // and returns a new promise that waits on them
+  // all to finish
+  return (
+    Promise.all([xPromise, yPromise])
+
+      // when that promise is resolved, let's take the
+      // received `X` and `Y` values and add them together.
+      .then(function (values) {
+        // `values` is an array of the messages from the
+        // previously resolved promises
+        return values[0] + values[1];
+      })
+  );
+}
+
+// `fetchX()` and `fetchY()` return promises for
+// their respective values, which may be ready
+// *now* or *later*.
+add(fetchX(), fetchY())
+  // we get a promise back for the sum of those
+  // two numbers.
+  // now we chain-call `then(..)` to wait for the
+  // resolution of that returned promise.
+  .then(function (sum) {
+    console.log(sum); // that was easier!
+  });
+```
+
+通过比较明显看出Promise模式的方法可以简洁的表达一些操作。
+
+Promise封装了依赖于时间的状态（等待未来值的产生，无论是现在还是未来产生，后续的步骤都是一样的，解决了同步回调还是异步回调的问题），其本身与时间无关，所以可以按照可预测的方式组合。但Promise一旦决议，那么永远将会保持在这个状态，成为不变值，可以随时查看。
+
+3. 【revealing-constructor】一种产生Promise的模式，通常格式为
+
+````javascript
+	new Promise (function (…){…})
+	```，传入的函数将会被立即执行。
+
+4. 【识别Promise】识别Promise是否为真正的Promise很重要。定义某种称为thenable的东西，将其定义为任何具有then(..)方法的对象和函数，任何这样的值就是Promise一致的thenable。如果Promise决议遇到了这样的thenable的值，那么就会被搁浅在这里，导致难以追踪的bug。
+
+5. 【Promise解决信任问题的方法】有五种回调导致的信任问题，分别来讲：
+	* 调用过早： 由于一个任务有时候同步完成，有时候异步完成。如果使用回调会导致Zalgo出现，使用Promise无论是立即决议的revealing-constructor模式，还是异步执行的内容，都会基于最前面所讲的任务队列来进行异步调用，这样就解决了调用过早的问题.
+	* 调用过晚：由于同步then调用时不被允许的，所以，一个Promise被决议之后，这个Promise上所有的通过then(…)注册的回调都会下一个异步时机点一次被立即调用。任意一个都无法影响或延误对其他回调的调用（不能插队）
+ Ex:
+
+```javascript
+p.then( function(){
+	p.then( function(){
+		console.log( "C" );
+	} );
+	console.log( "A" );
+} );
+p.then( function(){
+	console.log( "B" );
+} );
+// A B C
+
+function runme() {
+var i = 0;
+
+new Promise(function(resolve) {
+  resolve();
+})
+.then(function() {
+  i += 2;
+});
+alert(i);
+} //0
+````
+
+这里第一个function第一次注册了打印出A的then方法，打印出B的then方法，注册完毕后进行任务队列的处理，因为A先注册，所以先执行。这里又注册了一个C的then方法，虽然p已经被决议，但是并不能立即调用（不能同步调用），还是加入到任务队列的最后，不中断对B的执行。所以执行结果是A B C。
+
+第二个是即使是p立即决议了，但是then中的内容还是被延迟到执行完所有同步内容之后运行。
+
+但是不同Promise值的回调顺序是不可预测的，永远不要依赖于不同Promise之间的回调顺序来进行程序调度。
+
+    * 回调未调用 ： 没有任何东西（包括JavaScript错误）可以组织Promise决议，它总会调用resolve和reject处理方法中的一个，即使是超时也有超时模式进行处理。（后续会讲到）
+    * 调用次数过多或过少：由于Promise只能被决议一次，注册的then只会被最多调用一次，所以过多的调用会直接无效。过少就是之前解释的回调未调用的情况。
+    * 未能传递参数值、环境值：任何Promise都只能有一个决议值，如果resolve(…)或者reject(…)中传递了过多的参数，那都只会采纳第一个，而忽略其他的，如果要有多个，那么就要封装到数组或者对象中传递。
+    * 吞掉错误或异常：如果一个Promise产生了拒绝值并且给出了理由，那么这个就会被传给拒绝回调，即使是JavaScript的异常也会这样做。这里的会产生的另一个细节就是如果发生JavaScript错误会导致的同步调用，由于Promise的特性也会将其变为异步的调用。
+
+但是试想，如果在then的正确处理函数中出现了错误会发生什么？
+
+EX：
+
+```javascript
+var p = new Promise(function (resolve, reject) {
+  resolve(42);
+});
+
+p.then(
+  function fulfilled(msg) {
+    foo.bar();
+    console.log(msg); // never gets here :(
+  },
+  function rejected(err) {
+    // never gets here either :(
+  },
+);
+```
+
+由于第一个then中未定义bar函数，所以会产生一个错误，但是并不会立即处理，而是会产生另一个Promise，这个新的Promise会由于错误而被拒绝，并没有吞掉错误。因为p已经被决议为正确，所以不会因为fulfilled中间有错误而去调用rejected。
+
+    * Promise.resolve()方法产生的Promise保证了返回内容的可信任性：
+
+分别考虑resolve方法的参数，1）如果是一个非Promise，非thenable的 立即值，那么就会返回一个用这个值填充的Promise封装，保证了内容的可信任。（即使是错误值） 2）如果是一个Promise，那么也只会产生一个Promise。3）如果传递了一个thenable的非Promise，那么就会试图展开这个值，直到遇到了一个符合1条件的立即值，并封装为Promise
+
+通过这个方法，可以保证异步返回给回调函数的值为Promise可信任的。
+
+6. 【链式流】链式流可以应用在会进行多次异步调用的方法中，可以加强代码的清晰度可读性和快速定位错误。
+   参见下面两个代码段：
+
+```javascript
+//来自：http://imweb.io/topic/57a0760393d9938132cc8da9
+getUserAdmin().then(function(result) {
+    if ( /*管理员*/ ) {
+        getProjectsWithAdmin().then(function(result) {
+            /*根据项目id，获取模块列表*/
+            getModules(result.ids).then(function(result) {
+                /*根据模块id，获取接口列表*/
+                getInterfaces(result.ids).then(function(result) {
+                    // ...
+                })
+            })
+        })
+    } else {
+        //...
+    }
+})
+
+
+//链式流
+getUserAdmin().then(function(reult) {
+    if ( /*管理员*/ ) {
+        return getProjectsWithAdmin();
+    } else {
+        return getProjectsWithUser();
+    }
+}).then(function(result) {
+    /*获取project id列表*/
+    return getModules(result.ids);
+}).then(function(result) {
+    /*获取project id列表*/
+    return getInterfaces(result.ids)
+}).then(function(result) {
+    // ...
+})
+```
+
+能够产生链式流基于以下两个Promise的特性：
+_ 每次对Promise调用then(…)，它都会产生一个新的Promise。
+_ 不管从then(…)调用的完成回调（第一个参数）返回的值是什么，它都会被自动设置为被连接Promise的完成，这句话表述了这个新的Promise的值就是这个then调用方法里的return语句，如果没有，那么这个Promise的值就是undefined。
+考虑以下代码：
+
+```javascript
+var p = Promise.resolve(21);
+
+p.then(function (v) {
+  console.log(v); // 21
+
+  // fulfill the chained promise with value `42`
+  return v * 2;
+})
+  // here's the chained promise
+  .then(function (v) {
+    console.log(v); // 42
+  });
+```
+
+上面的代码充分展现了这两条规则。另外两条则充分说明了即使是返回一个Promise甚至返回中有异步调用（这里的异步调用不会被放入事件循环的最后，而是在这里直接延迟执行，后续的then会等待其执行完毕），这两条规则都会正常工作：
+
+```javascript
+var p = Promise.resolve(21);
+
+p.then(function (v) {
+  console.log(v); // 21
+
+  // create a promise and return it
+  return new Promise(function (resolve, reject) {
+    // fulfill with value `42`
+    resolve(v * 2);
+  });
+}).then(function (v) {
+  console.log(v); // 42
+});
+```
+
+```javascript
+var p = Promise.resolve(21);
+
+p.then(function (v) {
+  console.log(v); // 21
+
+  // create a promise to return
+  return new Promise(function (resolve, reject) {
+    // introduce asynchrony!
+    setTimeout(function () {
+      // fulfill with value `42`
+      resolve(v * 2);
+    }, 100);
+  });
+}).then(function (v) {
+  // runs after the 100ms delay in the previous step
+  console.log(v); // 42
+});
+```
+
+如果链中有步骤出错，会直接将这个错误封装为Promise传入到链中的下一个错误处理方法中（原因之前已经讲过）。如果这个错误处理return了一个值，那么这个值会被带入到下一个then处理的正确处理方法中，如果return了一个Promise那么就有可能会使得下一个then延迟调用。如果没有return，那就默认return undefined，同样也是正确处理中。
+
+默认的拒绝处理函数：如果产生了错误，但没有拒绝处理函数，那么就会有默认的，默认的所做的事情就是抛出错误，那么这个错误就会继续向下直到有显式的拒绝处理函数。
+默认的接收处理函数：纯粹将一个promise继续向下传递。如果只有拒绝处理可以将简写为：
+
+```javascript
+catch(function(err){…})
+```
+
+7. 【Promise的错误处理】
+   由于Promise一旦被决议就不再更改的特性，以下代码可能会导致没有错误处理函数来处理：
+
+```javascript
+var p = Promise.resolve(42);
+
+p.then(
+  function fulfilled(msg) {
+    // numbers don't have string functions,
+    // so will throw an error
+    console.log(msg.toLowerCase());
+  },
+  function rejected(err) {
+    // never gets here
+  },
+);
+```
+
+几种解决方案（除了1都未被ES6标准实现）：
+1） 在最后加catch，这样会导致的问题就是catch中的函数如果也有错误就无法捕捉。
+2）有个done函数，就算done函数有错误，也传入done中。
+
+8. 【Promise模式】之前介绍了两种并发的模式，这里有Promise来直接实现：
+   1） 门：几个均实现再继续进行： Promise.all([….])，参数可以是由立即值，thenable或者Promise组成的数组。
+   注意：如果传入空数组，那么接下来的内容就会被立即设定为完成。如果有Promise.all中有任意一个被拒绝，那么整个都被拒绝，进入到拒绝处理函数。这个模式传入到完成处理函数中的参数是一个数组，数组中的顺序与all中声明的顺序相同，与其产生的顺序无关。
+   2） 竞态：几个中只有一个能执行：Promise.race([…])，参数与all相同，但是如果是立即值的竞争那就会显得毫无意义，第一个立即值会胜出。
+   注意：一旦有一个Promise被完成，那就全部完成，如果第一个是拒绝，那么整个都被拒绝。如果传递空数组，那么Promise会永远都不会被决议。
+   3）超时模式的实现：之前讲到了会有超时模式，这里利用竞态可以来实现：
+
+```javascript
+// `foo()` is a Promise-aware function
+
+// `timeoutPromise(..)`, defined ealier, returns
+// a Promise that rejects after a specified delay
+
+// setup a timeout for `foo()`
+Promise.race([
+  foo(), // attempt `foo()`
+  timeoutPromise(3000), // give it 3 seconds
+]).then(
+  function () {
+    // `foo(..)` fulfilled in time!
+  },
+  function (err) {
+    // either `foo()` rejected, or it just
+    // didn't finish in time, so inspect
+    // `err` to know which
+  },
+);
+```
+
+4）几种变体：
+none：所有的Promise都是拒绝才是完成
+any：只要有一个完成就是完成
+first：只要第一个Promise完成，那么整个就是完成
+last：只有最后一个完成胜出
+
+9. 【Promise的问题】讲了那么多好处。。Promise当然也有问题：
+   1） 顺序错误处理：可能会有错误被忽略而被全局抛出
+   2）单一值：只能有一个完成值、拒绝值，否则只能封装解封，这样会显得有些笨重。（这个问题可以通过ES6中的...运算来方便处理~）
+
+3)  单决议：如果讲一个决议绑定到会重复进行的操作上，那么这个决议只会记住重复操作的第一次结果，如：
+
+```javascript
+// `click(..)` binds the `"click"` event to a DOM element
+// `request(..)` is the previously defined Promise-aware Ajax
+
+var p = new Promise(function (resolve, reject) {
+  click("#mybtn", resolve);
+});
+
+p.then(function (evt) {
+  var btnID = evt.currentTarget.id;
+  return request("http://some.url.1/?id=" + btnID);
+}).then(function (text) {
+  console.log(text);
+});
+//第二次按下就不会有任何操作，不会再次执行resolve
+```
+
+4） 惯性：已经有很多回调的代码不会自然的进行Promise改写
+5）无法取消：如果Promise因为某些原因悬而未决的话，无法从外部阻止其继续执行。
+6）Promise会对性能有稍稍影响，但总体功大于过。

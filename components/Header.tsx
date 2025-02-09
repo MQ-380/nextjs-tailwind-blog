@@ -27,12 +27,12 @@ export default function Header() {
       </Link>
 
       <div className="flex items-center space-x-4 leading-5 sm:space-x-6">
-        <div className="no-scrollbar hidden max-w-40 items-center space-x-4 overflow-x-auto pr-2 sm:flex sm:space-x-6 md:max-w-72 lg:max-w-96">
+        <div className="no-scrollbar hidden  items-center space-x-6 overflow-x-auto pr-2 sm:flex sm:space-x-6 ">
           {headerNavLinks.map((link) => (
             <Link
               key={link.title}
               href={link.href}
-              className="hover:text-primary-500 dark:hover:text-primary-400 m-1 block font-medium text-gray-900 dark:text-gray-100"
+              className="hover:text-primary-500 dark:hover:text-primary-400 my-1 mx-2 block font-medium text-gray-900 dark:text-gray-100"
             >
               {link.title}
             </Link>

@@ -1,0 +1,245 @@
+---
+layout: post
+title: 关于video元素的种种
+date: 2020-05-10 20:12:36 +0800
+category: 技术
+tags: [前端, 视频元素, video]
+---
+
+看起来已经很久没有写技术方面的文章了，今天就来记录一下最近经常打交道的一个html元素——video。
+
+
+说起video元素，是html5中新加入标准的“新兴”元素，基本目的是用来取代flash插件，以弥补html中关于多媒体的弱项。（一起被带入的当然audio元素）。
+
+P.S 经过了那么多年，Chrome似乎终于会在这几年不再支持flash。。
+
+不过，新元素总不是那么的完美。各个浏览器的厂商总有着自己奇奇怪怪的想法，最终导致的就是前端的晕厥。（如果所有的浏览器都能像Chrome那样完美那该多好啊。。）
+
+那么。进入正题。看看关于video兼容性的那些坑。以及一个小小的目标。
+
+## 今日的目标
+gif图。大家最喜欢的表情包就是这个格式，他能循环播放几帧动画。那么，同样的工作用视频不是也能完成么？看起来似乎很简单。じゃ　やりましょう！
+
+跟随本心一顿操作后，发现我们能不能换还是用gif呢？（
+
+关于视频用作动画图像为什么比gif更好，Apple公司给出缘由，同样的动画，MP4的视频所占用的带宽比gif图更小，占用的内存等资源也比gif更优。
+
+也就是这个原因。iOS从iOS 10开始放开了视频的各种限制，比如自动播放等。
+
+> But the GIF format turns out to be a very expensive way to encode animated images when compared to a modern video codec like H.264. We’ve found that GIFs can be up to twelve times as expensive in bandwidth and twice as expensive in energy use.   
+
+参考webkit官方文档：
+
+[New video Policies for iOS (WebKit)](https://webkit.org/blog/6784/new-video-policies-for-ios/)
+
+##  最初的最初
+
+让我们引入一个video元素作为本文的主角。so easy的代码
+
+```html
+<video class=‘video_area’>
+	<source src='' type='video/mp4'/>
+</video>
+```
+
+当然如果嫌麻烦，而且只有一个源，不需要兜底的话，直接写成这样也是ok的
+
+```html
+<video class='video_area' src=‘’/>
+```
+
+这样今天的主角就是这个video元素。后面的所有都会围绕这个展开。如果这个放在浏览器器中查看的话，可以看到各家浏览器厂商自己的原始想法。比如弹出播放，直接全屏播放，给出一个播放按钮等等。后面要做的就是慢慢统一这个百花齐放的局面。。。。。
+
+##  让他循环？静音？
+这些都是最简单的操作，各家也很好的遵守了这个规范，只需要在video元素上默默的加上这两个标签（muted，loop）即可。
+
+```html
+<video muted loop class='video_area' src=‘’/>
+```
+
+这样，视频就会静音循环播放。
+
+## 自动跳出全屏？浮出播放？
+这是个令人头疼的问题，有些安卓厂商的web内核，总喜欢接管video元素的播放，让他全屏，浮到最上层，让他变成fixed布局的感觉。（摊手。。）。我们需要的是让他乖乖的在文档流里！
+
+找出文档，找到一个有用的标签，就是这个了！playsinline！
+
+
+```html
+<video muted loop playsinline class='video_area' src=‘’/>
+```
+
+于是我们开始一顿操作，发现在手机上并没有生效？？没事。继续加
+```html
+<video muted loop playsinline webkit-playsinline class='video_area' src=‘’/>
+```
+
+看起来似乎好点了。。。
+
+拿到微信一看。。。什么？！好像还不是自己想要的那种。。
+
+看起来微信的x5 webview也有着自己的想法。那么我们Google一下，发现好像stackoverflow的那些同学不怎么碰到这个问题（。。。）。中文博客给的方法好像也都不怎么有效。。这时候。还是回归官方文档吧。。
+
+参考这个：[腾讯浏览服务-前端技术文档](https://x5.tencent.com/tbs/guide/tech.html#/)
+
+恩 这个元素很有效果，加入以后瞬间ok
+
+```html
+<video
+    muted loop 
+    playsinline webkit-playsinline
+    x5-video-player-type="h5-page" 
+    class='video_area' 
+    src=‘’/>
+```
+
+不过暂时不知道这个对于x5内核的版本有没有什么要求。。
+
+这样做了以后，大多数的环境还是ok的，安卓各种各样的原生浏览器除外。厂商太多太杂。顾了东面没了西面。如果有更好的方法，欢迎交流~
+
+## 自动播放？
+我好好一个动画，用户点击了才能看？这样估计是不行的，做点处理吧。这样
+
+```html
+<video
+    muted loop autoplay
+    playsinline webkit-playsinline
+    x5-video-player-type="h5-page" 
+    class='video_area' 
+    src=‘’/>
+```
+autoplay。望文生义，自动播放。这个标签各大厂商还是做得不错的。当然这里还是有一个坑点。
+
+坑点1 低电量模式
+原以为一切都是那么的顺利，直到广泛实验之后发现了两台iOS13的手机死活没法自动播放。连接Mac的Safari说是allow error。这次stackoverflow的回答千奇百怪五花八门。始终没找到好方法。
+
+然后搜索iOS13的新功能的时候，发现省电模式的介绍。。。恍然大悟，关掉低电量模式，果然可以自动播放了。
+
+原来打开了iOS的低电量模式以后，iOS就自动屏蔽了视频的自动播放，一定要用户有所操作。
+
+那就只能接受，从控制台的报警来看，这个play()这个方法竟然是个Promise。播放的时候就是pending，如果拒绝自动播放的话，就会给一个rejected的状态。知道了这个。（机智的）前端们：“那我们就给个虚拟按钮的点击不就好了？”
+
+(当然，如果要做这个的话，要在页面加载完的回调里手动触发play()方法，也是和autoplay一样的效果，这里暂且保留autoplay）
+试验如下
+
+```html
+<video
+    muted loop autoplay
+    playsinline webkit-playsinline
+    x5-video-player-type="h5-page" 
+    class='video_area' 
+    src=‘’/>
+
+<div class='button' />
+```
+(CSS省略）
+```javascript
+	window.onload = () => {
+		let playPromise = document.getElementById('video').play();
+// 似乎有些地方play不会返回个promise
+	   if(playPromise) {
+			     playPromise.then(
+			     () => {},   // 顺利播放的话就什么也不用做了
+			     () => {
+			       // rejected的话模拟点击一下
+				    document.getElementById('button').click();
+			 }
+		  )
+	}
+	}
+```
+
+然后发现。。。似乎iOS并不买虚拟点击的帐，所以这里唯一的解决方案就是。。。
+让这个按钮可视化让用户点击。。
+不过滑动等等操作也可以，一般用户无意识的操作scroll的时候出发这个其实也是ok。
+
+那这个如果rejected就展示button的详细代码就从略了。。基本和上面的差不多。
+
+##  控制条很碍事？干掉！
+其实干掉控制条还是很“简单“的，如果大家都按照规范的话，一句CSS足矣。
+```css
+.video::-webkit-media-controls{
+    display: none !important;
+}
+```
+
+在电脑上其实效果很好了。但是，有些手机就是不怎么听话。还是会骄傲的展示进度条。。
+
+如果愿意裁切的话，其实可以通过CSS布局的方法把播放条很好的隐藏起来就行。但是这样终究不是很好。接下来，就要介绍我们另一位好伙伴，canvas出场！
+
+## Canvas救场
+canvas就是一块画布，往上面填东西。既然video标签五花八门的事情那么多，那么我们就开动脑筋！把video上的东西画到画布上吧！
+
+（互联网上其实有很多这样的做法，可以解决很多事情，比如自定义控制条，不展示原始的视频啊等等，都可以通过这样的方式实现）
+
+简单的思路
+
+一个隐藏的video元素 -> 加一个定时器每隔一段时间把video元素的内容画到canvas上。
+
+仅此而已。
+接下来就是coding time！
+
+```html
+
+<video
+    muted loop autoplay
+    playsinline webkit-playsinline
+    x5-video-player-type="h5-page" 
+    class='video_area' 
+    id='video'
+    onPlay={drawOnCanvas}
+    src=‘’/>
+
+<canvas class='canvas_video_area' id='canvas'/>
+
+<div class='button' />
+
+```
+
+```javascript
+	window.onload = () => {
+		let playPromise = 
+             document.getElementById('video').play();
+     // 似乎有些地方play不会返回个promise
+	   if(playPromise) {
+			playPromise.then(
+				() => {},   // 顺利播放的话就什么也不用做了
+			    () => {
+					// rejected的话模拟点击一下
+					document.getElementById('button').click();
+				}
+			)
+		}
+	}
+
+  function drawOnCanvas() {
+	    let ctx = document.getElementById('canvas');	
+	    let video = document.getElementById('video');	
+//每隔50ms把视频元素上的内容，画到canvas上
+        setTimeout(()=>{
+		     ctx.getContext('2d').drawImage(video, 0, 0, width, height);
+		}, 50);
+	}
+```
+
+这样，其实在大多数的环境中已经可以正常显示了。接下来要做的就是要让真实的视频元素隐藏掉。
+隐藏的方式有很多种，就不做介绍啦。不过，用fixed布局设置0的高度宽度似乎iOS的兼容性最好。
+
+## 还有一个小问题
+这个问题只是体验上的问题，就不详细贴代码了。（懒。。）
+
+在安卓手机上，这样的画法总会出现一闪而过的黑屏。体验上总不是很好，找了很多技术大佬的博客，发现这个回调方法确实还不错，而且效果还行。
+
+就是timeupdate这个回调。这个timeupdate会在播放的时候每隔一段时间调用一次。那么就只要在这个回调里判断，如果当前的播放时间已经是0.1s以后了，那么才把内容画到canvas上。这样就能解决一开始的黑屏啦。(需要一个判断的flag，只有在刚开始播放的时候才做，否则会一直调用这个方法，性能感觉会有问题）
+
+## 总结
+这几天糊这个也是花了很多时间，摸索，搜索前人走过的路。。这里其实也就是个方法的总结备忘。真正实现的过程中其实还会有这样那样的小细节需要去避开和解决的，这里也没有详细的列出（相信各位机智的读者碰到例如视频画到canvas上的比例问题，如何在视频播放前展示一张兜底图等等之类的小细节会处理的很好~）。
+
+这样的话，本文就到这里啦。希望下次写技术文章不会过很久。。。
+
+以上。
+
+
+
+2020.5.10
+

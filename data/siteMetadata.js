@@ -3,6 +3,7 @@ const siteMetadata = {
   title: 'MQ Blog',
   author: 'Subaru Izumi',
   headerTitle: 'Izumi',
+  // Add the self introduction
   description: 'A blog',
   language: 'zh-CN',
   theme: 'system', // system, dark or light

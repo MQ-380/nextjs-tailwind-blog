@@ -1,0 +1,229 @@
+---
+layout: post
+title: JavaScript精进之路  — 函数、闭包与原型链
+date: 2017-08-10 00:03:36 +0800
+category: 技术
+tags: [JavaScript, 前端, 基础]
+---
+
+开这个专题，说实话，就是为了准备校招，补补基础知识吧。
+
+今天这个话题是因为这几天看了《JavaScript忍者秘籍》，感觉这本书把这几个内容讲的蛮透彻了，特撰本文，以便日后翻阅。（应该都会以知识点的形式给出吧。）
+
+
+## 函数
+1. 【基本类型】JavaScript中函数为first-class object，typeof的结果是object，没有function这个基本类型，但有可以调用的Function构造器。说到这个就列举一下JavaScript中的几个基本类型：
+				* null                       （空值）
+				* undefined           （未定义）
+				* boolean              （布尔）
+				* number              （数字）
+				* string                  （字符串）
+				* object                 （对象）
+				* symbol               （符号）
+除了null的typeof结果是object以外，其他类型的typeof都是自己的基本类型名称。这几个类型还能有一堆可以讲的地方、之后再写~
+
+2. 【函数声明】函数的字面量声明有四个部分组成，但有些可以省略，列举如下:
+		* function 关键字
+		* 可选名称 ，可以匿名，但如果有必须为有效的JavaScript 标识符
+		* 括号内部一个以逗号分隔的参数列表
+		* 大括号括起来的函数体
+  
+3. 【name属性】有名称的函数name属性永远为自己的名称。关于匿名函数赋予变量后的name属性是什么。。。我这里试出来ES5和ES6都是赋予后的变量名。
+
+4. 【函数调用与this的绑定】在这本《忍者秘籍》里给出了一个理解this绑定的方法：将this理解为运行上下文，this指的就是调用函数时的运行上下文。this的绑定实在运行时候确定的，而不是编译时。（在《你不知道的JavaScript》中详细讲了四种this绑定，以后补~）
+  这里讲了四种函数调用的方式：
+		* 作为一个函数进行调用
+    就是作为一般的函数，直接在全局上下文中调用。
+		* 作为一个方法进行调用
+ 将函数作为一个对象中的方法进行调用，那么这时候this就会绑定在这个对象的上下文中。
+同时如果在全局中定义一个函数，赋值到对象的属性中，其可以对不同对象进行操作，互不影响。（如图例）
+
+```javascript
+
+//全局的函数
+function all () {
+	console.log(this.a);
+}
+//第1个对象
+let o1 = {
+	a: "In1",
+	func1: function () {
+		return this.a
+	},
+	func2: all
+ }
+//第2个对象
+let o2 = {
+	a: "In2",
+	func: all
+}
+
+let a = "Out" 
+
+console.log(o1.func1())   //method in object    In1
+o1.func2()      //this is o1      In1
+o2.func()       //this is o2      In2
+
+```
+
+* 作为构造器进行调用
+    也就是利用new运算符进行调用。
+    构造器调用的时候会进行以下步骤：
+				* 创建一个新的对象
+				* 传递给构造器的参数的对象是this参数，从而成为构造器的函数上下文
+				* 如果没有显示的返回值，创建的对象则作为构造器的返回值返回（即使有return值，作为构造器调用的时候，也返回新创建的对象）
+        
+Ex:
+
+``` javascript
+function Ninja () {
+	this.ninjaName = function () {}
+	return 3
+}
+
+let ninja1 = new Ninja()
+let ninja2 = new Ninja()
+
+ //利用构造器得到两个不同的对象
+console.log(ninja1 === ninja2)    //false
+//作为构造器调用时，返回的是对象而不是return值
+console.log(ninja1)        // Ninja { ninjaName: [Function] }
+//作为一般函数调用时，返回的是返回值
+console.log(Ninja())      //3
+```
+
+
+* 通过apply()或call()方法进行调用
+  可以随意改变函数的调用上下文，apply与call的区别是除第一个指定函数执行时this绑定参数之外的参数。apply传入参数数组，而call传入全部参数。
+
+5. 【函数参数】函数实际传入的参数和声明时候的参数列表可以不同。
+ 如果传入的比声明的少，那么没有传入数据的声明将会是undefined，若多，则多出来的的传入数据将无法通过变量名的方式访问到。
+参数可以通过函数的argument属性访问到，这是一个类数组，无法使用大多的数组的自带方法。
+
+6. 【匿名函数】对象内的匿名函数如果被赋值给了另一个对象，会产生引用丢失的问题。
+
+7. 【函数的属性】函数作为对象，可以存储一些参数值，以方便做一些特殊的处理。主要用途有函数存储和自记忆函数。
+函数存储可以用来存储要调用的函数，自记忆函数可以用来缓存函数已经运行过的结果，减少重复计算（自记忆函数可以通过闭包的方式进行再优化）
+
+8. 【函数的变长参数】可以通过apply方法给出变长参数的数组。（ES6中可以使用...解包）
+如：
+
+```javascript
+
+let list = [7,9,1,2,0,10]
+Math.max(list[0],list[1]....) //此处省略，过于麻烦，要列出所有位置
+Math.max.apply(Math, list)    //利用apply可以直接传入数组
+Math.max(...list)            //ES6中可以通过解包符直接传入
+
+```
+ 
+通过闭包的特性，同样可以实现通过参数个数不同的判断，进行函数的重载。
+
+## 闭包
+1. 【闭包的定义】闭包是一个函数在创建时允许自身访问并操作该函数之外的变量时所创建的作用域。->声明的函数什么时候都可以调用，即使是在作用域消失之后。
+典型的闭包：
+
+```javascript
+let outer = 'ninja'
+let later
+
+function outerFunction () {
+	let inner = 'samurai'
+	
+	function innerFunction (paramValue) {
+		console.log(inner)
+		console.log(paramValue)
+		console.log(toolate)
+	}
+
+	later = innerFunction
+}
+	console.log(toolate)    //undefined （用let会报错）
+	var toolate = 'ronin'
+	outerFunction()   //创建闭包
+	later('wakizashi')    //ninja wakizashi ronin 都输出了
+```
+
+闭包创建了一个气泡，保护了函数声明那一时间点的作用域里的所有函数和变量，获得了执行操作所需要的所有东西。
+有三个有趣的结论：
+* 内部函数的参数是包含在闭包中的
+* 作用域之外的所有变量，即使是函数声明之后，但是在函数被调用之前的那些声明也都包含在闭包中
+* 相同的作用域内，尚未声明的变量不能使用（let声明）、值为undefined（var声明）
+
+2. 【闭包的用处】
+* 创建私有变量：利用function的特性，可以创建一个变量无法在外部直接访问，需要用getter和setter，这两个函数就是闭包的作用
+* 回调和计时器：回调函数中可以通过闭包来访问外部的变量
+
+3. 【绑定函数上下文（bind）】bind函数的用法与apply和call不同，
+简化版的bind：
+
+```javascript
+function bind (context, name) {
+	return function () {
+		return context[name].apply(context, arguments)
+	}
+}
+//通过闭包的特性，来得到要绑定的函数
+//系统bind的使用：
+functionName.bind(newThis)()
+```
+
+4. 【使用闭包实现的函数缓存记忆】
+ 使用到的技巧：每个函数都有自己的上下文，所以函数从来都不是闭包的一部分。但是可以通过创建一个变量引用到这个上下文中（let fn = this，后面的function中可以利用fn调用到之前的this指向的上下文），从而将上下文也通过闭包保存起来。
+
+具体的实现可以参见《忍者秘籍》书P103
+
+5. 【函数的即时调用】
+ 通常用于匿名函数，主要作用是可以保护作用域和变量名不污染全局。
+ 并且可以解决迭代问题（同样可以用来解决变量名称过长的问题，将长名称传入即时调用的函数中，在函数中利用参数名进行操作）：
+
+```javascript
+for(let i = 0;i < div.length; i++) {
+	(function(n) {
+		div[n].addEventListener("click", function(){
+			alert("div #" + n + "was clicked")
+		}, false)
+	})(i)
+}
+//通过立即执行函数，直接把i和对应的div绑定，如果不这样做，最后按所有的按钮都会是最后一个i值（因为没有实时绑定）
+```
+
+闭包肯定不止这么多内容，以后还会补充《你不知道的JavaScript》的内容
+
+
+## 原型链
+JavaScript通过原型链实现继承。
+
+1. 【prototype与new操作的共同使用】
+ 只有通过new操作产生的对象，可以使用构造器函数原型链上的内容，否则对象只能使用自己原型链上的内容。利用这个可以得出，利用构造器函数可以将JavaScript产生类似于类的概念。
+
+2. 【prototype的使用】
+prototype在对象创建之后如果有改动，所做的改动同样会影响到已经创建的对象上去。
+对于对象中的引用，先检查是否在自己的声明中存在，如果存在则用自己声明的，如果不存在则循着原型链向上找，找到object根元素，如果仍然不存在，则返回undefined。
+prototype其实是object隐藏属性constructor的一个属性，所以可以利用这个进行原型链，原型是实时附加在对象上的。
+
+3. 【保持原型链】
+ 用一个对象的实例作为另一个对象的原型，调用方式如下
+
+```javascript
+SubClass.prototype = new SuperClass()
+```
+
+这样SubClass的实例不仅拥有原型，更有SuperClass中的所有属性。并且instanceOf SuperClass也会判断正确。
+
+注意： 永远不要使用SubClass.prototype = SuperClass.prototype，如果这样做的话所有SubClass上的prototype修改都会影响到SuperClass上，会产生副作用。
+
+4. 【hasOwnProperty()方法】
+  利用这个方法可以检测属性是否是原生就有的，而不是通过检测原型链得到的。
+
+5. 【一些需要避免的场景】
+* 扩展Object的prototype，这样会影响到所有的对象
+* 扩展Number的prototype
+* 产生原生对象的子类（尽量采用另外写类，但同名方法通过prototype来调用原生对象方法的方法）
+* 通过构造器创建对象不加new操作符（这样做会有可能产生错误得不到对象并且污染全局变量）
+
+
+这些就是读完《忍者秘籍》的一部分感想和知识点，这本书最精华的部分应该就是这三块的精炼描述了，这本书还讲到了JavaScript的测试方法、正则表达式、定时器、运行时求值、事件与DOM操作以及一些跨浏览器的实践方法。是一本好书（经常参加促销的好书~），可以借来或者买来一读~。
+
+
+以上。

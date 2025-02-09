@@ -1,6 +1,7 @@
-import type { NextConfig } from "next";
-import { withContentlayer } from "next-contentlayer2";
-import withBundleAnalyzer from "@next/bundle-analyzer";
+import type { NextConfig } from 'next'
+
+import withBundleAnalyzer from '@next/bundle-analyzer'
+import { withContentlayer } from 'next-contentlayer2'
 
 const output = process.env.EXPORT ? 'export' : undefined
 const basePath = process.env.BASE_PATH || undefined
@@ -29,17 +30,17 @@ const nextConfig: NextConfig = {
       rules: {
         // 添加你需要的 loader 配置
         '.md': ['raw-loader'],
-        '.mdx': ['@mdx-js/loader']
+        '.mdx': ['@mdx-js/loader'],
       },
       resolveAlias: {
         // 如果需要添加别名配置
-      }
-    }
-  }
-};
+      },
+    },
+  },
+}
 
 const bundleAnalyzerConfig = {
   enabled: process.env.ANALYZE === 'true',
-};
+}
 
-export default withContentlayer(withBundleAnalyzer(bundleAnalyzerConfig)(nextConfig));
+export default withContentlayer(withBundleAnalyzer(bundleAnalyzerConfig)(nextConfig))

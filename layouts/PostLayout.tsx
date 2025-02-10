@@ -37,7 +37,7 @@ export default function PostLayout({
       <ScrollTop />
       <article>
         <div>
-          <header className="pt-6 xl:flex xl:pb-6 ">
+          <header className="pt-6 xl:flex xl:pb-6 justify-between">
             <div className="space-y-1 text-left xl:w-2/3">
               <dl className="space-y-10">
                 <div>
@@ -55,7 +55,7 @@ export default function PostLayout({
               <PageTitle>{title}</PageTitle>
               <dd>字数 {readingTime.words}</dd>
             </div>
-            <div className="xl:w-1/3">
+            <div>
               {tags && (
                 <div className="py-4 xl:py-8">
                   <h2 className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">

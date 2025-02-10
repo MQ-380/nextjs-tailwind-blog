@@ -1,9 +1,19 @@
 ---
 layout: post
 title: JavaScript红宝书再阅读（2）
-date: 2021-3-6 23:00:00 +0800
+date: '2021-3-6 23:00:00 +0800'
 category: 技术
-tags: [JavaScript, 前端, 读书笔记, 再学习]
+tags:
+  - JavaScript
+  - 前端
+  - 读书笔记
+  - 再学习
+summary: >-
+  第7章 迭代器与生成器
+
+   1. 迭代器
+
+  迭代器模式描述了一个方案，即可以把有些实现了正式的Iterable接口，而且可以通过迭代器Iterator消费的结构称为”可迭代对象“（iterable）。...
 ---
 
 # 第7章 迭代器与生成器
@@ -436,7 +446,7 @@ for (const x of foo) console.log(x);
 // 1 2 3
 ```
 
-### 提前终止迭代器
+### 提前终止生成器
 
 return和throw方法都可以用于生成器进入关闭状态。
 

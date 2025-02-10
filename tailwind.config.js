@@ -1,0 +1,82 @@
+// @ts-check
+import colors from 'tailwindcss/colors';
+import forms from '@tailwindcss/forms';
+import typo from '@tailwindcss/typography';
+
+/** @type {import("tailwindcss").Config } */
+module.exports = {
+  content: [
+    './node_modules/pliny/**/*.js',
+    './app/**/*.{js,ts,jsx,tsx}',
+    './pages/**/*.{js,ts,tsx}',
+    './components/**/*.{js,ts,tsx}',
+    './layouts/**/*.{js,ts,tsx}',
+    './data/**/*.mdx',
+  ],
+  darkMode: 'class',
+  corePlugins: {
+    preflight: false, // 禁用所有预设样式
+  },
+  theme: {
+    extend: {
+      lineHeight: {
+        11: '2.75rem',
+        12: '3rem',
+        13: '3.25rem',
+        14: '3.5rem',
+      },
+      colors: {
+        primary: colors.pink,
+        gray: colors.gray,
+      },
+      zIndex: {
+        60: '60',
+        70: '70',
+        80: '80',
+      },
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      typography: ({ theme }) => ({
+        DEFAULT: {
+          css: {
+            a: {
+              color: theme('colors.primary.500'),
+              '&:hover': {
+                color: `${theme('colors.primary.600')}`,
+              },
+              code: { color: theme('colors.primary.400') },
+            },
+            'h1,h2': {
+              fontWeight: '700',
+              letterSpacing: theme('letterSpacing.tight'),
+            },
+            h3: {
+              fontWeight: '600',
+            },
+            code: {
+              color: theme('colors.indigo.500'),
+            },
+          },
+        },
+        invert: {
+          css: {
+            a: {
+              color: theme('colors.primary.500'),
+              '&:hover': {
+                color: `${theme('colors.primary.400')}`,
+              },
+              code: { color: theme('colors.primary.400') },
+            },
+            'h1,h2,h3,h4,h5,h6': {
+              color: theme('colors.gray.100'),
+            },
+          },
+        },
+      }),
+    },
+  },
+  plugins: [
+    forms,
+    typo,
+  ],
+}

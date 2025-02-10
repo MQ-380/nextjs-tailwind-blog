@@ -1,125 +1,116 @@
-import { ComputedFields, defineDocumentType, makeSource } from 'contentlayer2/source-files'
-import { Post } from 'contentlayer/generated'
-import { writeFileSync } from 'fs'
-import { slug } from 'github-slugger'
-import { fromHtmlIsomorphic } from 'hast-util-from-html-isomorphic'
-import path from 'path'
+import {
+  ComputedFields,
+  defineDocumentType,
+  makeSource,
+} from "contentlayer2/source-files";
+import { Post } from "contentlayer/generated";
+import { writeFileSync } from "fs";
+import { slug } from "github-slugger";
+import path from "path";
 import {
   extractTocHeadings,
   remarkCodeTitles,
   remarkExtractFrontmatter,
   remarkImgToJsx,
-} from 'pliny/mdx-plugins/index.js'
-import { allCoreContent, sortPosts } from 'pliny/utils/contentlayer.js'
-import prettier from 'prettier'
-import readingTime from 'reading-time'
-import rehypeAutolinkHeadings from 'rehype-autolink-headings'
-import rehypeCitation from 'rehype-citation'
-import rehypeKatex from 'rehype-katex'
-import rehypeKatexNoTranslate from 'rehype-katex-notranslate'
-import rehypePresetMinify from 'rehype-preset-minify'
-import rehypePrismPlus from 'rehype-prism-plus'
+} from "pliny/mdx-plugins/index.js";
+import { allCoreContent, sortPosts } from "pliny/utils/contentlayer.js";
+import prettier from "prettier";
+import readingTime from "reading-time";
+import rehypeCitation from "rehype-citation";
+import rehypeKatex from "rehype-katex";
+import rehypeKatexNoTranslate from "rehype-katex-notranslate";
+import rehypePresetMinify from "rehype-preset-minify";
+import rehypePrismPlus from "rehype-prism-plus";
 // Rehype packages
-import rehypeSlug from 'rehype-slug'
+import rehypeSlug from "rehype-slug";
 // Remark packages
-import remarkGfm from 'remark-gfm'
-import { remarkAlert } from 'remark-github-blockquote-alert'
-import remarkMath from 'remark-math'
+import remarkGfm from "remark-gfm";
+import { remarkAlert } from "remark-github-blockquote-alert";
+import remarkMath from "remark-math";
 
-import siteMetadata from './data/siteMetadata'
+import siteMetadata from "./data/siteMetadata";
 
-const root = process.cwd()
-const isProduction = process.env.NODE_ENV === 'production'
-
-// heroicon mini link
-const icon = fromHtmlIsomorphic(
-  `
-  <span class="content-header-link">
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 linkicon">
-  <path d="M12.232 4.232a2.5 2.5 0 0 1 3.536 3.536l-1.225 1.224a.75.75 0 0 0 1.061 1.06l1.224-1.224a4 4 0 0 0-5.656-5.656l-3 3a4 4 0 0 0 .225 5.865.75.75 0 0 0 .977-1.138 2.5 2.5 0 0 1-.142-3.667l3-3Z" />
-  <path d="M11.603 7.963a.75.75 0 0 0-.977 1.138 2.5 2.5 0 0 1 .142 3.667l-3 3a2.5 2.5 0 0 1-3.536-3.536l1.225-1.224a.75.75 0 0 0-1.061-1.06l-1.224 1.224a4 4 0 1 0 5.656 5.656l3-3a4 4 0 0 0-.225-5.865Z" />
-  </svg>
-  </span>
-`,
-  { fragment: true }
-)
+const root = process.cwd();
+const isProduction = process.env.NODE_ENV === "production";
 
 const computedFields: ComputedFields = {
-  readingTime: { type: 'json', resolve: (doc) => readingTime(doc.body.raw) },
+  readingTime: { type: "json", resolve: (doc) => readingTime(doc.body.raw) },
   slug: {
-    type: 'string',
-    resolve: (doc) => doc._raw.flattenedPath.replace(/^.+?(\/)/, ''),
+    type: "string",
+    resolve: (doc) => doc._raw.flattenedPath.replace(/^.+?(\/)/, ""),
   },
   path: {
-    type: 'string',
+    type: "string",
     resolve: (doc) => doc._raw.flattenedPath,
   },
   filePath: {
-    type: 'string',
+    type: "string",
     resolve: (doc) => doc._raw.sourceFilePath,
   },
-  toc: { type: 'json', resolve: (doc) => extractTocHeadings(doc.body.raw) },
-}
+  toc: { type: "json", resolve: (doc) => extractTocHeadings(doc.body.raw) },
+};
 
 /**
  * Count the occurrences of all tags across blog posts and write to json file
  */
 async function createTagCount(allPosts: Post[]) {
-  const tagCount: Record<string, number> = {}
+  const tagCount: Record<string, number> = {};
   allPosts.forEach((file) => {
     if (file.tags && (!isProduction || file.draft !== true)) {
       file.tags.forEach((tag) => {
-        const formattedTag = slug(tag)
+        const formattedTag = slug(tag);
         if (formattedTag in tagCount) {
-          tagCount[formattedTag] += 1
+          tagCount[formattedTag] += 1;
         } else {
-          tagCount[formattedTag] = 1
+          tagCount[formattedTag] = 1;
         }
-      })
+      });
     }
-  })
-  const formatted = await prettier.format(JSON.stringify(tagCount, null, 2), { parser: 'json' })
-  writeFileSync('./app/tag-data.json', formatted)
+  });
+  const formatted = await prettier.format(JSON.stringify(tagCount, null, 2), {
+    parser: "json",
+  });
+  writeFileSync("./app/tag-data.json", formatted);
 }
 
 function createSearchIndex(allPosts: Post[]) {
   if (
-    siteMetadata?.search?.provider === 'kbar' &&
+    siteMetadata?.search?.provider === "kbar" &&
     siteMetadata.search.kbarConfig.searchDocumentsPath
   ) {
     writeFileSync(
       `public/${path.basename(siteMetadata.search.kbarConfig.searchDocumentsPath)}`,
-      JSON.stringify(allCoreContent(sortPosts(allPosts)))
-    )
-    console.log('Local search index generated...')
+      JSON.stringify(allCoreContent(sortPosts(allPosts))),
+    );
+    console.log("Local search index generated...");
   }
 }
 
 export const Blog = defineDocumentType(() => ({
-  name: 'Post',
-  filePathPattern: 'posts/**/*.mdx',
-  contentType: 'mdx',
+  name: "Post",
+  filePathPattern: "posts/**/*.mdx",
+  contentType: "mdx",
   fields: {
-    title: { type: 'string', required: true },
-    date: { type: 'date', required: true },
-    tags: { type: 'list', of: { type: 'string' }, default: [] },
-    lastmod: { type: 'date' },
-    draft: { type: 'boolean' },
-    summary: { type: 'string' },
-    images: { type: 'json' },
-    authors: { type: 'list', of: { type: 'string' } },
-    layout: { type: 'string' },
-    bibliography: { type: 'string' },
-    canonicalUrl: { type: 'string' },
-    category: { type: 'string' },
+    title: { type: "string", required: true },
+    date: { type: "date", required: true },
+    tags: { type: "list", of: { type: "string" }, default: [] },
+    lastmod: { type: "date" },
+    draft: { type: "boolean" },
+    summary: { type: "string" },
+    images: { type: "json" },
+    authors: { type: "list", of: { type: "string" } },
+    layout: { type: "string" },
+    bibliography: { type: "string" },
+    canonicalUrl: { type: "string" },
+    category: { type: "string" },
   },
   computedFields: {
     ...computedFields,
     structuredData: {
-      type: 'json',
+      type: "json",
       resolve: (doc) => ({
-        '@context': 'https://schema.org',
-        '@type': 'BlogPosting',
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
         headline: doc.title,
         datePublished: doc.date,
         dateModified: doc.lastmod || doc.date,
@@ -129,29 +120,29 @@ export const Blog = defineDocumentType(() => ({
       }),
     },
   },
-}))
+}));
 
 export const Authors = defineDocumentType(() => ({
-  name: 'Authors',
-  filePathPattern: 'authors/**/*.mdx',
-  contentType: 'mdx',
+  name: "Authors",
+  filePathPattern: "authors/**/*.mdx",
+  contentType: "mdx",
   fields: {
-    name: { type: 'string', required: true },
-    avatar: { type: 'string' },
-    occupation: { type: 'string' },
-    company: { type: 'string' },
-    email: { type: 'string' },
-    twitter: { type: 'string' },
-    bluesky: { type: 'string' },
-    linkedin: { type: 'string' },
-    github: { type: 'string' },
-    layout: { type: 'string' },
+    name: { type: "string", required: true },
+    avatar: { type: "string" },
+    occupation: { type: "string" },
+    company: { type: "string" },
+    email: { type: "string" },
+    twitter: { type: "string" },
+    bluesky: { type: "string" },
+    linkedin: { type: "string" },
+    github: { type: "string" },
+    layout: { type: "string" },
   },
   computedFields,
-}))
+}));
 
 export default makeSource({
-  contentDirPath: 'data',
+  contentDirPath: "data",
   documentTypes: [Blog, Authors],
   mdx: {
     cwd: process.cwd(),
@@ -165,26 +156,26 @@ export default makeSource({
     ],
     rehypePlugins: [
       rehypeSlug,
-      [
-        rehypeAutolinkHeadings,
-        {
-          behavior: 'prepend',
-          headingProperties: {
-            className: ['content-header'],
-          },
-          content: icon,
-        },
-      ],
+      // [
+      //   rehypeAutolinkHeadings,
+      //   {
+      //     behavior: 'prepend',
+      //     headingProperties: {
+      //       className: ['content-header'],
+      //     },
+      //     content: icon,
+      //   },
+      // ],
       rehypeKatex,
       rehypeKatexNoTranslate,
-      [rehypeCitation, { path: path.join(root, 'data') }],
-      [rehypePrismPlus, { defaultLanguage: 'js', ignoreMissing: true }],
+      [rehypeCitation, { path: path.join(root, "data") }],
+      [rehypePrismPlus, { defaultLanguage: "js", ignoreMissing: true }],
       rehypePresetMinify,
     ],
   },
   onSuccess: async (importData) => {
-    const { allPosts } = await importData()
-    createTagCount(allPosts)
-    createSearchIndex(allPosts)
+    const { allPosts } = await importData();
+    createTagCount(allPosts);
+    createSearchIndex(allPosts);
   },
-})
+});

@@ -1,9 +1,21 @@
 ---
 layout: post
 title: React和它的小伙伴们(3) - React Hooks
-date: 2021-7-10 16:00:00 +0800
+date: '2021-7-10 16:00:00 +0800'
 category: 技术
-tags: [JavaScript, 前端, React, 源码]
+tags:
+  - JavaScript
+  - 前端
+  - React
+  - 源码
+summary: |-
+  本文为近期有关于React Hooks源码学习的笔记小结，原文对应为：
+
+  $1
+
+   一 为什么要使用Hooks？
+
+  React Hooks是React 16.8中引入的有关于函数组件的相关进化，解决了...
 ---
 
 本文为近期有关于React Hooks源码学习的笔记小结，原文对应为：
@@ -24,18 +36,18 @@ Function组件在之前主要做简单的展示逻辑，没有复杂的业务逻
 
 1. 函数组件的执行函数：renderWithHooks。两大功能，执行函数组件、改变ReactCurrentDispatch对象。
 2. 初始化Hooks：
-    - mountWorkInProgressHook生成hooks链表
-    - mountState初始化state
-    - dispatchAction控制无状态组件更新
-    - mountEffect初始化useEffect内容
-    - mountMemo初始化useMemo
-    - mountRef初始化useRef
-    - mountState初始化useState
+   - mountWorkInProgressHook生成hooks链表
+   - mountState初始化state
+   - dispatchAction控制无状态组件更新
+   - mountEffect初始化useEffect内容
+   - mountMemo初始化useMemo
+   - mountRef初始化useRef
+   - mountState初始化useState
 3. 更新hooks
-    - updateWorkInProgressHook更新hooks链表，找到对应hooks
-    - updateState获取最新state
-    - updateEffect更新updateQueue
-    - updateMemo/updateRefs之类的进行更新
+   - updateWorkInProgressHook更新hooks链表，找到对应hooks
+   - updateState获取最新state
+   - updateEffect更新updateQueue
+   - updateMemo/updateRefs之类的进行更新
 
 # 三 从何而来?
 
@@ -45,13 +57,13 @@ function组件的初始化是调用这个方法开始的：
 
 ```jsx
 renderWithHooks(
-	null,                   // current Fiber
-	workInProgress,         // workInProgress Fiber
-	Component,              // 函数组件本身
-	props,                  // 函数组件的props
-	context,                // 函数组件的context
-	renderExpirationTime    // 渲染优先级标志
-)
+  null, // current Fiber
+  workInProgress, // workInProgress Fiber
+  Component, // 函数组件本身
+  props, // 函数组件的props
+  context, // 函数组件的context
+  renderExpirationTime, // 渲染优先级标志
+);
 ```
 
 引申：current Fiber和workInProgress Fiber：
@@ -62,11 +74,11 @@ renderWithHooks(
 
 - workInProgress.memoizedState:
 
-    对于Class组件，这个内容主要是用来存放state信息，而在函数式组件中，将以 **链表** 形式来存放hooks的信息。
+  对于Class组件，这个内容主要是用来存放state信息，而在函数式组件中，将以 **链表** 形式来存放hooks的信息。
 
-    需要注意区分两个memoizedState：
+  需要注意区分两个memoizedState：
 
-    此处Fiber树上的会保存hooks信息链表或者state信息，而hooks数据结构中也会有这个内容，但是其中存储的是每个Hooks不同的内容
+  此处Fiber树上的会保存hooks信息链表或者state信息，而hooks数据结构中也会有这个内容，但是其中存储的是每个Hooks不同的内容
 
 - currentHooks：current树上的当前调度的hooks节点。
 - workInProgressHooks：workInProgress树上的当前调度的hooks节点
@@ -97,9 +109,8 @@ const HooksDispatcherOnUpdate = {
   useMemo: updateMemo,
   useReducer: updateReducer,
   useRef: updateRef,
-  useState: updateState
+  useState: updateState,
 };
-
 ```
 
 # 四 Hooks的初始化
@@ -108,9 +119,9 @@ const HooksDispatcherOnUpdate = {
 
 主要围绕四个重点Hooks：
 
-useState：组件状态和更新触发  useEffect：执行副作用
+useState：组件状态和更新触发 useEffect：执行副作用
 
-useRef：保存数据                        useMemo：缓存优化
+useRef：保存数据 useMemo：缓存优化
 
 ## mountWorkInProgressHook
 
@@ -118,7 +129,7 @@ useRef：保存数据                        useMemo：缓存优化
 
 Hooks的对象里存储的内容：
 
-1. **memoizedState**:  每个Hooks中会缓存不一样的数据。useState：state信息、useEffect：effect对象、useMemo：缓存的值、useRef：ref对象
+1. **memoizedState**: 每个Hooks中会缓存不一样的数据。useState：state信息、useEffect：effect对象、useMemo：缓存的值、useRef：ref对象
 2. **baseQueue**：useState和useReducer中保存最新的更新队列。
 3. **baseState**：useState和useReducer中，一次更新中，产生的最新state的值
 4. **queue**：保存待更新队列pendingQueue，更新函数dispatch等信息
@@ -139,10 +150,10 @@ A：因为React中会进行对比current树和workInProgress树进行比较。�
 
 1. 无论是类组件调用setState还是函数组件的dispatchAction都会产生一个update对象，记录此次更新的信息，然后把这个update放入待更新的pending队列中。（队列也是循环链表）
 2. 判断当前函数组件的Fiber是否出入渲染阶段。
-    - 处于更新阶段，那么就不需要更新组建，而是更新expirationTime即可。
-    - 不处于更新阶段，则调用lastRenderedReducer来获取最新的state，和上一次的currentState作比较。
-        - currentState和新state相同，就不会触发更新操作
-        - 不相同，调用scheduleUpdateOnFiber调度渲染到当前的Fiber。
+   - 处于更新阶段，那么就不需要更新组建，而是更新expirationTime即可。
+   - 不处于更新阶段，则调用lastRenderedReducer来获取最新的state，和上一次的currentState作比较。
+     - currentState和新state相同，就不会触发更新操作
+     - 不相同，调用scheduleUpdateOnFiber调度渲染到当前的Fiber。
 
 ## useEffect与mountEffect
 
@@ -233,4 +244,3 @@ A5：将缓存的内容保存在hook的memoizedState中，方便后续的运行�
 Q6：useEffect中为什么不能写异步async函数？
 
 A6：因为useEffect需要return一个函数，为了在下一次执行的时候apply执行这个函数进行销毁时候的操作。如果使用了async函数就会导致返回给React内核的是一个Promise，而没有apply方法，导致报错。所以要使用async的话需要重新包一层函数然后调用，这样就不会返回一个Promise给内核方法。
-

@@ -1,0 +1,146 @@
+:root {
+  --timeline-color: rgba(0, 0, 0, 0.075);
+  --timeline-node-bg: #c2c6cc;
+  --timeline-year-dot-color: #ffffff;
+  --text-muted-color: #757575;
+  --link-color: #0056b2;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --timeline-node-bg: rgb(150, 152, 156);
+    --timeline-color: rgb(63, 65, 68);
+    --timeline-year-dot-color: rgb(150, 152, 156);
+    --text-muted-color: #868686;
+    --link-color: rgb(138, 180, 248);
+  }
+}
+.archives {
+  letter-spacing: 0.03rem;
+}
+.year-marker {
+  position: relative;
+  left: 2px;
+  margin-left: -4px;
+  height: 3.5rem;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 700;
+  display: block;
+}
+
+.year-marker::before {
+  content: '';
+  position: relative;
+  left: 79px;
+  float: left;
+  top: -1rem;
+  height: 72px;
+  width: 4px;
+  background-color: var(--timeline-color);
+}
+
+.year-marker:first-child::before {
+  top: 1.5rem;
+  height: 2rem;
+}
+
+.year-marker::after {
+  content: '';
+  display: inline-block;
+  position: relative;
+  border-radius: 50%;
+  width: 12px;
+  height: 12px;
+  left: 19px;
+  border: 3px solid;
+  background-color: var(---timeline-year-dot-color);
+  border-color: var(--timeline-node-bg);
+  box-shadow: 0 0 2px 0 #c2c6cc;
+  z-index: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-mode]) .post-wrapper li:nth-child(odd),
+  html.dark .post-wrapper li:nth-child(odd) {
+    background-image: linear-gradient(
+      to left,
+      rgb(26, 26, 30),
+      rgb(39, 39, 45),
+      rgb(39, 39, 45),
+      rgb(39, 39, 45),
+      rgb(26, 26, 30)
+    );
+  }
+}
+
+.post-wrapper li:nth-child(odd) {
+  background-color: var(--main-bg, #ffffff);
+  background-image: linear-gradient(to left, #ffffff, #fbfbfb, #fbfbfb, #fbfbfb, #ffffff);
+}
+
+.post-wrapper {
+  margin-bottom: 1rem;
+  li {
+    font-size: 1.1rem;
+    line-height: 3rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    &::before {
+      top: 0;
+      left: 77px;
+      height: 3.1rem;
+      content: '';
+      width: 4px;
+      position: relative;
+      float: left;
+      background-color: var(--timeline-color);
+    }
+    .date.day {
+      font-size: 85%;
+      font-family: Lato, sans-serif;
+    }
+    .date.month {
+      width: 1.4rem;
+      text-align: center;
+    }
+    .text-muted {
+      color: var(--text-muted-color) !important;
+    }
+    .ms-1 {
+      margin-left: 0.25rem !important;
+    }
+    .small,
+    small {
+      font-size: 0.875em;
+    }
+    .date {
+      white-space: nowrap;
+      display: inline-block;
+      position: relative;
+      right: 0.5rem;
+    }
+  }
+}
+
+.post-link {
+  margin-left: 2.5rem;
+  position: relative;
+  top: 0.1rem;
+  color: var(--link-color);
+  &::before {
+    content: '';
+    display: inline-block;
+    position: relative;
+    border-radius: 50%;
+    float: left;
+    width: 8px;
+    height: 8px;
+    top: 1.35rem;
+    left: 71px;
+    background-color: var(--timeline-node-bg);
+    box-shadow: 0 0 3px 0 #c2c6cc;
+    z-index: 1;
+  }
+}

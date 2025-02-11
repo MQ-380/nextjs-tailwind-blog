@@ -14,9 +14,6 @@ module.exports = {
     './data/**/*.mdx',
   ],
   darkMode: 'class',
-  corePlugins: {
-    preflight: false, // 禁用所有预设样式
-  },
   theme: {
     extend: {
       lineHeight: {

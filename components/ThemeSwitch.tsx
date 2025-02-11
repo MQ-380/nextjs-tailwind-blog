@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { Fragment, useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react';
 
 import {
   Menu,
@@ -10,10 +10,10 @@ import {
   Radio,
   RadioGroup,
   Transition,
-} from '@headlessui/react'
-import { useTheme } from 'next-themes'
+} from '@headlessui/react';
+import { useTheme } from 'next-themes';
 
-import { Moon, Sun, System } from '@/icons/iconsSvg'
+import { Moon, Sun, System } from '@/icons/iconsSvg';
 
 enum Theme {
   LIGHT = 'light',
@@ -22,10 +22,12 @@ enum Theme {
 }
 
 export default function ThemeSwitch() {
-  const [mounted, setMounted] = useState(false)
-  const { theme, setTheme, resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false);
+  const { theme, setTheme, resolvedTheme } = useTheme();
 
-  useEffect(() => setMounted(true), [])
+  useEffect(() => setMounted(true), []);
+
+  console.log(theme);
 
   return (
     <div className="mr-5 flex items-center">
@@ -70,18 +72,18 @@ export default function ThemeSwitch() {
         </Transition>
       </Menu>
     </div>
-  )
+  );
 }
 
 const ThemeChangeMenuItem = ({ text, Icon }: { text: Theme; Icon: React.ReactNode }) => (
   <MenuItem>
     {({ focus }) => (
       <button
-        className={`${focus ? 'bg-primary-600 text-white' : ''} group flex w-full items-center rounded-md px-2 py-2 text-sm`}
+        className={`${focus ? 'bg-pink-600 text-white' : ''} group flex w-full items-center rounded-md px-2 py-2 text-sm`}
       >
         <div className="mr-2">{Icon}</div>
         {text.charAt(0).toUpperCase() + text.slice(1).toLowerCase()}
       </button>
     )}
   </MenuItem>
-)
+);

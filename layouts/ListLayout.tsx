@@ -1,19 +1,13 @@
 'use client';
 
-import { Dispatch, SetStateAction, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
-import { Button } from '@headlessui/react';
 import { CoreContent } from 'pliny/utils/contentlayer.js';
 
+import Pagination from '@/components/Pagination';
 import PostList from '@/components/PostList';
 
 import { Post } from '@/.contentlayer/generated';
-
-interface PaginationProps {
-  currentPage: number;
-  setCurrentPage: Dispatch<SetStateAction<number>>;
-  totalPages: number;
-}
 
 interface ListLayoutProps {
   posts: CoreContent<Post>[];
@@ -76,25 +70,6 @@ export default function ListLayout({ posts, title }: ListLayoutProps) {
         />
       )}
     </>
-  );
-}
-
-function Pagination({ totalPages, currentPage, setCurrentPage }: PaginationProps) {
-  const handleChangePage = (step: number) => {
-    setCurrentPage((page) => page + step);
-  };
-
-  return (
-    <div className="space-y-2 pt-6 pb-8 md:space-y-5">
-      <nav className="flex justify-between">
-        <Button disabled={currentPage === 1} onClick={() => handleChangePage(-1)}>
-          Prev
-        </Button>
-        <Button disabled={currentPage === totalPages} onClick={() => handleChangePage(1)}>
-          Next
-        </Button>
-      </nav>
-    </div>
   );
 }
 

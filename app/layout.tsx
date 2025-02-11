@@ -1,45 +1,41 @@
-import type { Metadata } from "next";
-import "css/tailwind.css";
-import {
-  Geist,
-  Geist_Mono,
-  Source_Sans_3,
-  Space_Grotesk,
-} from "next/font/google";
+import type { Metadata } from 'next';
+import { Geist, Geist_Mono, Source_Sans_3, Space_Grotesk } from 'next/font/google';
 
-import { Analytics, AnalyticsConfig } from "pliny/analytics/index.js";
-import "pliny/search/algolia.css";
-import { SearchConfig, SearchProvider } from "pliny/search/index.js";
-import "remark-github-blockquote-alert/alert.css";
+import 'css/tailwind.css';
+import { Analytics, AnalyticsConfig } from 'pliny/analytics/index.js';
+import 'pliny/search/algolia.css';
+import { SearchConfig, SearchProvider } from 'pliny/search/index.js';
+import 'remark-github-blockquote-alert/alert.css';
 
-import Footer from "@/components/Footer";
-import Header from "@/components/Header";
-import SectionContainer from "@/components/SectionContainer";
+import Footer from '@/components/Footer';
+import Header from '@/components/Header';
+import SectionContainer from '@/components/SectionContainer';
 
-import siteMetadata from "@/data/siteMetadata";
+import siteMetadata from '@/data/siteMetadata';
 
-import { ThemeProviders } from "./theme-providers";
+import { ThemeProviders } from './theme-providers';
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
 });
 
 const space_grotesk = Space_Grotesk({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-space-grotesk",
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-space-grotesk',
 });
 
-const sourceSan3 = Source_Sans_3();
+const sourceSan3 = Source_Sans_3({
+  subsets: ['latin'],
+});
 
-const { title, description, socialBanner, language, analytics, search } =
-  siteMetadata;
+const { title, description, socialBanner, language, analytics, search } = siteMetadata;
 
 export const metadata: Metadata = {
   title: {
@@ -50,11 +46,11 @@ export const metadata: Metadata = {
   openGraph: {
     title,
     description,
-    url: "./",
+    url: './',
     siteName: title,
     images: [socialBanner],
-    locale: "zh-CN",
-    type: "website",
+    locale: 'zh-CN',
+    type: 'website',
   },
 };
 
@@ -96,16 +92,8 @@ export default function RootLayout({
         color="#5bbad5"
       /> */}
       <meta name="msapplication-TileColor" content="#000000" />
-      <meta
-        name="theme-color"
-        media="(prefers-color-scheme: light)"
-        content="#fff"
-      />
-      <meta
-        name="theme-color"
-        media="(prefers-color-scheme: dark)"
-        content="#000"
-      />
+      <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000" />
+      <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fff" />
       <body
         className={`${sourceSan3.className} ${geistSans.variable} ${geistMono.variable} bg-white pl-[calc(100vw-100%)] text-black antialiased dark:bg-gray-950 dark:text-gray-400`}
       >

@@ -1,4 +1,4 @@
-:root {
+.light {
   --timeline-color: rgba(0, 0, 0, 0.075);
   --timeline-node-bg: #c2c6cc;
   --timeline-year-dot-color: #ffffff;
@@ -6,8 +6,16 @@
   --link-color: #0056b2;
 }
 
+.dark {
+  --timeline-node-bg: rgb(150, 152, 156);
+  --timeline-color: rgb(63, 65, 68);
+  --timeline-year-dot-color: rgb(150, 152, 156);
+  --text-muted-color: #868686;
+  --link-color: rgb(138, 180, 248);
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light):not(.dark) {
     --timeline-node-bg: rgb(150, 152, 156);
     --timeline-color: rgb(63, 65, 68);
     --timeline-year-dot-color: rgb(150, 152, 156);
@@ -61,7 +69,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  html:not([data-mode]) .post-wrapper li:nth-child(odd),
+  html.dark .post-wrapper li:nth-child(odd),
   html.dark .post-wrapper li:nth-child(odd) {
     background-image: linear-gradient(
       to left,

@@ -16,8 +16,9 @@ summary: |-
 
   依据什么排序呢？如果有一条从u指向v的边，那么u在排序结果中一定会在v前面。正因如此，所有拓扑排序只对有...
 ---
- 
+
 ## 什么是拓扑排序？
+
 拓扑排序和其他排序算法不同，它主要是给有向无环图中所有结点的一种线性排序。
 
 依据什么排序呢？如果有一条从u指向v的边，那么u在排序结果中一定会在v前面。正因如此，所有拓扑排序只对有向无环图有效，如果图中存在任何形式的环路，那么拓扑排序将不会对其产生作用。
@@ -31,10 +32,11 @@ summary: |-
 图示：某教授早上起床后的动作顺序，a为普通图，b为拓扑排序后的图。
 
 （算法导论图22-7）
-![](/assets/img/blog/poj1094-1.png)
 
+<Image src={'/static/images/blogs/poj1094-1.png'} alt="poj" width={902} height={419} />
 
 ## 拓扑排序的算法表示
+
 拓扑排序可以利用DFS进行，就是DFS的扩展应用，主要思想就是：
 
 当一个结点出发的DFS完全完成之后，那么这个结点已经没有任何的后继结点可以遍历，那么这个结点就可以放在拓扑排序的结果中，结果保存在一个栈中。因为放入了栈中，其实就是放在拓扑排序的头部。（已经没有出度了）。
@@ -43,12 +45,13 @@ summary: |-
 
 1、 调用dfs_travel()；
 
-2、  在dfs_travel()每次调用dfs()的过程中，都记录了顶点s的完成时间，将顶点s按完成顺序保存在存放拓扑排序顺序的栈topoSort中。这样，该数组就存放了按先后顺序访问完成的所有顶点。
+2、 在dfs_travel()每次调用dfs()的过程中，都记录了顶点s的完成时间，将顶点s按完成顺序保存在存放拓扑排序顺序的栈topoSort中。这样，该数组就存放了按先后顺序访问完成的所有顶点。
 
-3、  最后拓扑排序得到的线性序列，即为topoSort。
+3、 最后拓扑排序得到的线性序列，即为topoSort。
 
 talk is cheap:(代码前提，没有环，可能有环的情况见例题）
-```c++
+
+```cpp
 stack<int> tpsort;
 vector<vector<int>> graph;
 bool visited[graph.size()];
@@ -70,6 +73,7 @@ void dfs(int x){
 ```
 
 ## 例题
+
 LeetCode 207 Course Schedule
 
 这道题就是拓扑排序的简化版，其实只要用一次DFS即可，主要考点就是拓扑排序中不能有环存在，检测环要记录这一次DFS走过的路径才可以，所以每次走完DFS后，cycle中其实是空的。只要用DFS检测出环，即可判断为false
@@ -79,14 +83,15 @@ LeetCode 207 Course Schedule
 其实也可以用BFS做，可以参见LeetCode中Solution中的代码，解释的也很详尽。
 
 上代码
-```c++
+
+```cpp
 class Solution {
 public:
-    
+
     bool canFinish(int numCourses, vector<pair<int, int>>& prerequisites) {
         if(prerequisites.empty()) return true;
         vector<unordered_set<int>> graph(numCourses);
-        
+
         int size = prerequisites.size();
         for(int i=0;i<size;i++){
             graph[prerequisites[i].second].insert(prerequisites[i].first);
@@ -95,13 +100,13 @@ public:
         vector<bool> flag(numCourses, false);
         for(int i = 0;i<numCourses;i++){
             if(!flag[i])
-                if(DFS(graph,visited,i,flag)) 
+                if(DFS(graph,visited,i,flag))
                     return false;
         }
         return true;
     }
-    
-    
+
+
     bool DFS(vector<unordered_set<int>> &matrix, unordered_set<int> &visited, int b, vector<bool> &flag){
     flag[b] = true;
     visited.insert(b);
@@ -124,13 +129,13 @@ LeetCode 210 Course Schedule II
 
 上代码
 
-```c++
+```cpp
 class Solution {
 public:
     vector<int> findOrder(int numCourses, vector<pair<int, int>>& prerequisites) {
         vector<int> ans;
         vector<unordered_set<int>> graph(numCourses);
-        
+
         for(int i=0;i<prerequisites.size();i++){
             graph[prerequisites[i].second].insert(prerequisites[i].first);
         }
@@ -147,7 +152,7 @@ public:
         reverse(ans.begin(),ans.end());
         return ans;
     }
-    
+
     bool dfs_sort(vector<int>& ans,int x,vector<bool>& visited,vector<unordered_set<int>>&graph,unordered_set<int>& cycle){
         if(visited[x]) return true;
         visited[x] = true;

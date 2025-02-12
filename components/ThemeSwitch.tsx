@@ -26,9 +26,6 @@ export default function ThemeSwitch() {
   const { theme, setTheme, resolvedTheme } = useTheme();
 
   useEffect(() => setMounted(true), []);
-
-  console.log(theme);
-
   return (
     <div className="mr-5 flex items-center">
       <Menu as="div" className="relative inline-block text-left">

@@ -42,7 +42,7 @@ export function Main({ posts }: MainProps) {
                 <CustomLink href={'/about'} className="text-blue-600 dark:text-blue-400">
                   Aboutページ
                 </CustomLink>{' '}
-                をご覧ください。。
+                をご覧ください。
               </p>
             </div>
             <div>

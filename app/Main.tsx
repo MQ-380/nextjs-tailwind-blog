@@ -19,7 +19,7 @@ export function Main({ posts }: MainProps) {
           <h1 className="text-3xl leading-9 font-extrabold tracking-tight text-gray-700 sm:text-4xl sm:leading-10 md:text-6xl md:leading-14 dark:text-gray-100">
             Welcome
           </h1>
-          <div className="flex items-end justify-between">
+          <div className="flex flex-col items-end justify-between xl:flex-row">
             <div className="text-lg leading-7 break-normal text-gray-500 xl:w-5/6 dark:text-gray-400">
               <p>🇯🇵 💻</p>
               <p>

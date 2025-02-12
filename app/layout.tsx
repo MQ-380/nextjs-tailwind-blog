@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono, Source_Sans_3, Space_Grotesk } from 'next/font/google';
 
+import { Analytics as VercelAnalytics } from '@vercel/analytics/react';
 import 'css/tailwind.css';
 import { Analytics, AnalyticsConfig } from 'pliny/analytics/index.js';
 import 'pliny/search/algolia.css';
@@ -59,7 +60,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // TODO: add a site icon
   const basePath = process.env.BASE_PATH || '';
 
   return (
@@ -101,6 +101,7 @@ export default function RootLayout({
             <Footer />
           </SectionContainer>
         </ThemeProviders>
+        <VercelAnalytics />
       </body>
     </html>
   );

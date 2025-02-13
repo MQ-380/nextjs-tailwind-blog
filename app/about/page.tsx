@@ -25,8 +25,7 @@ export default function AboutPage() {
     </Suspense>
   );
 }
-
-export function About() {
+function About() {
   const searchParams = useSearchParams();
   const search = searchParams.get('lan');
   const [language, setLanguage] = useState(

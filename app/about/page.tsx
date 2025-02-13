@@ -93,6 +93,9 @@ const getContent = (lan: LANGUAGE) => {
 };
 
 function ChineseInto() {
+  {
+    /* eslint-disable */
+  }
   return (
     <>
       <h2>自我</h2>
@@ -165,7 +168,10 @@ function ChineseInto() {
       </p>
       <p>
         在旅游的同时，入手了Sony的A7R5相机，开始捣鼓一些摄影，拙作可以参见我的Instagram
-        <a href="https://www.instagram.com/mq380" color="blue"> -> Ins</a>
+        <a href="https://www.instagram.com/mq380" color="blue">
+          {' '}
+          -&gt; Ins
+        </a>
       </p>
       <p>
         古人云，读万卷书行万里路。在行遍天下的过程中，也不能忘记读书。无论是在上海还是东京的家中，都陆陆续续存放了很多书籍。从历史到人文，从经济到政治。读书才能够让人感受到知识海洋的浩瀚无边。
@@ -317,8 +323,12 @@ function EnglishInfo() {
         maintain a strong interest in everything related to railways.
       </p>
       <p>
-        While traveling, I acquired a Sony A7R5 camera and started exploring photography. You can check out my humble work on Instagram
-        <a href="https://www.instagram.com/mq380" color="blue"> -> Ins</a>
+        While traveling, I acquired a Sony A7R5 camera and started exploring photography. You can
+        check out my humble work on Instagram
+        <a href="https://www.instagram.com/mq380" color="blue">
+          {' '}
+          -&gt; Ins
+        </a>
       </p>
       <p>
         As the ancient saying goes, "Read ten thousand books, travel ten thousand miles." While
@@ -437,7 +447,10 @@ function JapaneseInfo() {
       </p>
       <p>
         旅行の途中で、SonyのA7R5カメラを購入し、写真撮影を始めました。私の拙い作品はInstagramでご覧いただけます
-        <a href="https://www.instagram.com/mq380" color="blue"> -> Ins</a>
+        <a href="https://www.instagram.com/mq380" color="blue">
+          {' '}
+          -&gt; Ins
+        </a>
       </p>
       <p>
         古人は「万巻の書を読み、万里の道を行く」と言いました。世界中を巡る過程で、読書も忘れてはいけません。上海でも東京の家でも、多くの本を徐々に集めてきました。歴史から人文科学まで、経済から政治まで。読書によって、知識の海の広大さを感じることができます。

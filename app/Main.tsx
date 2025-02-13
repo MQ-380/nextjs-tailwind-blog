@@ -32,16 +32,16 @@ export function Main({ posts }: MainProps) {
               <p>
                 {`A frontend developer living in Tokyo, exploring both tech and life. For more about
                 me,please visit `}
-                <CustomLink href={'/about'} className="text-blue-600 dark:text-blue-400">
+                <CustomLink href={'/about?lan=en'} className="text-blue-600 dark:text-blue-400">
                   the About page
                 </CustomLink>
                 .
               </p>
               <p>
                 東京在住のフロントエンドエンジニア。技術だけでなく、生活も大切に。詳しくは
-                <CustomLink href={'/about'} className="text-blue-600 dark:text-blue-400">
+                <CustomLink href={'/about?lan=ja'} className="text-blue-600 dark:text-blue-400">
                   Aboutページ
-                </CustomLink>{' '}
+                </CustomLink>
                 をご覧ください。
               </p>
             </div>

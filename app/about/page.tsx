@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 
 import { useSearchParams } from 'next/navigation';
 
@@ -18,7 +18,14 @@ enum LANGUAGE {
   ENG = 'English',
 }
 
-export default function About() {
+export default function AboutPage() {
+  return (
+    <Suspense>
+      <About />
+    </Suspense>
+  );
+}
+function About() {
   const searchParams = useSearchParams();
   const search = searchParams.get('lan');
   const [language, setLanguage] = useState(

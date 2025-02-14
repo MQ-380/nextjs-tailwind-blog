@@ -1,0 +1,246 @@
+---
+layout: post
+title: 博客重构记
+date: '2025-02-14 21:00 +0900'
+category: NEWYEAR
+tags:
+  - 技术
+  - 前端
+  - nextjs
+  - blog
+  - 记录
+---
+
+每年2月似乎都想要折腾一下blog的架构，这次终于时隔2年以后，对blog进行了技术上的改造。这篇文章主要记录一下blog从创建以来的主要架构变化。
+
+## 前奏
+
+第一次架构这个blog应该可以追溯到2016年，那时候刚刚了解到Github Page的功能，以及自己也开始在课程设计中学习前端的知识，所以就有了自己构建一个blog的想法。当时只是很简单的套用了网上的Jekyll的模板，对于一些样式做了一些小小的修改。
+那时候对于前端也处于瞎子摸象的阶段，改到什么样算什么样，主要还是为了展示自己的文章为主。
+
+第一个仓库指路： https://github.com/MQ-380/oldblog
+
+到了4年前，因为自己博客的更新频率有点低，导致于换了几次电脑之后，就忘了如何往blog上面更新文章。就想着索性利用一个基于Ruby的仓库生成静态页面，放到github的仓库中。同样是利用了网上的模板进行了小修小补。这个版本的blog的样式我感觉还是十分满意的。
+
+仓库指路：https://github.com/MQ-380/mq-380-old.github.io
+
+2年前，这个仓库进行了更新，（因为同样忘记了怎么push文章），所以就跟着这个仓库的更新，又重新做了一个repo。：）
+
+仓库指路： https://github.com/MQ-380/latest-blog-repo
+
+其实上面这些repo都也只是clone了一个仓库，并没有太多自己的发挥。
+
+## 新篇
+
+其实去年2月的时候，就想着用Nextjs来改造一下自己的blog，但是因为当时自己的懒散和缺乏设计感，也就没有把这件事情进行下去。到了2025年，因为正巧看到了一个很好设计的仓库，便参考了这个仓库的代码，自己从头开始用NextJs和Taiwind CSS对这个博客进行了架构上的改造。
+
+参考的仓库：https://github.com/MQ-380/tailwind-css-starter-blog
+
+## Why
+
+为什么要用NextJS？
+
+因为自己的工作过程中，都一直使用NextJS作为开发的框架，上手也比较容易。
+
+为什么是Tailwind CSS ？
+
+这个反倒是因为自己没怎么用过这个CSS库，趁着他们最近发布了最新的V4版本，所以就想要利用这个仓库。
+
+## How
+
+上手之后，其实利用nextJS提供的脚手架，现在很快就能构建一个开发的初始环境，并且有了设计上的参考，所以进行的还是比较快的。
+
+写这个架构的过程当中，还是遇到了一些坑，稍后会有所记录。
+
+写代码大概只花了3天左右的时间，便有了大致的框架，（感谢参考的库和Github免费plan的Copilot）并且加入了自己想要的功能，比如Timeline这个页面，是之前那个那个版本的blog上我想要保留的页面，所以就参考之前的CSS代码，写了这样的一个页面，并且对黑暗模式进行了适配。
+
+之后就是转移文章，并且对配图进行了一些修改，让文章中的图片可以正确的展示出来。
+
+接着部署。利用了Vercel提供的免费的Hobby Plan，把Github的仓库直接推到了他们的平台上，可以说是一键式部署了。
+
+最后把域名的DNS解析从之前的腾讯云转移到了我域名注册地提供的DNS服务。blog的改造就算这样完成了。
+
+## 踩坑记
+
+在构造的过程中，其实也遇到了一些问题的，这里就把它汇总记录了一下。
+
+### 黑暗模式
+
+说实话，这是我第一次处理黑暗模式，了解到了实现这个模式可以通过以下几个方式：
+
+CSS的媒体查询器，通过prefers-color-scheme来判断用户的系统是否开启了黑暗模式，然后进行相应的样式调整。
+
+```css
+@media (prefers-color-scheme: dark) {
+  /* Dark theme styles */
+}
+```
+
+其次，可以一些库，例如本次使用的next-theme通过在localStorage中存储用户的选择，然后进行样式的调整。
+例如在html的class上加入dark，然后通过CSS的选择器来进行样式的调整。
+
+```javascript
+if (
+  localStorage.theme === 'dark' ||
+  (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
+) {
+  document.documentElement.classList.add('dark');
+} else {
+  document.documentElement.classList.remove('dark');
+}
+```
+
+因为在Tailwind的v4中，对于黑暗模式的支持出现了一些变化，导致了我的黑暗模式切换出了一点的问题。查了很久也没有得到解决，最后通过观察CSS的解析发现，似乎CSS一直采用了第一个media查询的方式来获取系统设置的模式，导致了没有办法切换。
+最后用这个破口，找到了V4中对于黑暗模式CSS样式的支持，需要新的配置方式。
+
+```css
+@custom-variant dark (&:where(.dark, .dark *));
+```
+
+### MD和MDX
+
+因为之前的文章都是用md格式写的，原本以为md格式的东西直接改后缀就能用了，结果发现并非如此。再利用contentlayer生成的时候，出现了很多的错误，才发现了他们之间的区别。
+
+修改后缀的时候，也用了shell
+
+```shell
+cd /Users/mouizumi/nextjs-tailwind-blog/data/posts
+
+for file in *.md; do
+    mv "$file" "${file%.md}.mdx"
+done
+```
+
+mdx因为需要支持html的标签等内容，所以有一些特殊字符不能够进行直接写，而需要转义。
+
+因为blog中需要用到summary，而自己之前的文章中，并没有summary的这个tag，导致了没有在首页上的文章预览。自己一个个加入又太累了，所以利用了Copilot的功能，写出了一个批处理文件，能够自动加入所有的summary，极大的缩短了自己的工作量。
+
+````javascript
+import fs from 'fs/promises'
+import path from 'path'
+import matter from 'gray-matter'
+
+const POSTS_DIR = './data/posts'
+const SUMMARY_LENGTH = 100
+
+async function generateSummary() {
+  try {
+    // 读取所有 MDX 文件
+    const files = await fs.readdir(POSTS_DIR)
+    console.log(files);
+    const mdxFiles = files.filter(file => file.endsWith('.mdx'))
+
+    for (const file of mdxFiles) {
+      const filePath = path.join(POSTS_DIR, file)
+      const content = await fs.readFile(filePath, 'utf8')
+
+      // 解析 frontmatter 和内容
+      const { data, content: mdxContent } = matter(content)
+
+      // 提取纯文本内容（移除 markdown 标记和代码块）
+      let plainText = mdxContent
+        .replace(/```[\s\S]*?```/g, '') // 移除代码块
+        .replace(/\[.*?\]\(.*?\)/g, '$1') // 将链接转换为纯文本
+        .replace(/[#*`_]/g, '') // 移除 markdown 标记
+        .trim()
+
+      // 提取前 100 个字符作为摘要
+      const summary = plainText.slice(0, SUMMARY_LENGTH) + '...'
+
+      // 更新 frontmatter
+      data.summary = summary
+
+      // 重新组合内容
+      const updatedContent = matter.stringify(mdxContent, data)
+
+      // 写回文件
+      await fs.writeFile(filePath, updatedContent)
+
+      console.log(`✓ Updated summary for ${file}`)
+    }
+  } catch (error) {
+    console.error('Error:', error)
+  }
+}
+
+generateSummary()
+
+
+### Tailwind CSS
+
+这里其实不算是踩坑，想写一下自己对于这个库的一些见解。
+
+这个库，其实会把基本所有的默认设置重置，需要自己对每一个元素进行定义，在给足充分的自定义空间的同时，也增加了一些复杂度。例如，在MDX文章渲染的时候，对于ul和li的样式，就需要自己重新定义一个React组件，并且对它们的样式进行指定，否则就不会出现这个表单正确和预期的样式。
+例如这样：
+
+```javascript
+
+export const Ol = ({ children }: { children?: unknown }) => {
+  const itemRef = useRef(null);
+  const level = useTagLevel(itemRef);
+  return (
+    <ol className={`list-decimal list-inside ml-${level * 4}`}>
+      {children as React.ReactNode}
+    </ol>
+  );
+};
+
+export const Ul = ({ children }: { children?: unknown }) => {
+  const itemRef = useRef(null);
+  const level = useTagLevel(itemRef);
+  return (
+    <ul className={`list-[circle] list-inside ml-${level * 4}`} ref={itemRef}>
+      {children as React.ReactNode}
+    </ul>
+  );
+};
+
+const useTagLevel = (itemRef: RefObject<HTMLLIElement | null>) => {
+  const [level, setLevel] = useState(0);
+
+  useEffect(() => {
+    function getListNestingLevel(element: HTMLElement) {
+      let level = 0;
+      let parent = element.parentElement;
+
+      while (parent) {
+        if (parent.tagName === "UL" || parent.tagName === "OL") {
+          level++;
+        }
+        parent = parent.parentElement;
+      }
+
+      return level;
+    }
+
+    if (itemRef.current) {
+      setLevel(getListNestingLevel(itemRef.current));
+    }
+  }, [itemRef]);
+
+  return level;
+};
+
+````
+
+利用自定义的Hook来获取层级，来正确展示这个元素。后来发现对于H1，H2之类的MDX中利用固有元素的进行定义大小的东西也需要自己写，我就换用了自己覆盖CSS的方法来进行实现，减少复杂度了。
+
+其次，对于这个框架和其他一些CSS-in-JS来说，确实还蛮容易上手的，基本把所有的CSS设置全部转换成了className的设定，保证了所有元素的样式都是可控的，统一的，方便了维护，但是className的长度也是会变得很长，也算是一个缺点吧。
+
+如果接下来自己有需要写一些自己项目需要用到的话，可能还是会考虑利用这个库吧。
+
+### ServiceWorker
+
+最后部署的时候，遇到了一个小问题。就是之前那个版本的blog利用了ServiceWorker进行了缓存的操作，因为nextjs这个架构中，并没有用到这个东西。所以没有办法通过sw.js的hash版本来更新曾经看过这个网站的人的缓存。
+
+这个问题其实也没有得到解决，或许等待24小时之后，就回把serviceworker自动解除了。
+
+这里留个教训，需要再去学习一下serviceWorker的内容，通过实践的经验来学习。
+
+## 展望
+
+其实用NextJS也只是为了拓展自己blog的可能性。可扩展性和自己对其的掌控有了质的飞跃。因为我之前的架构中使用到的Ruby等等技术，都是自己不熟悉的内容。
+
+所以接下来或许还会对这个blog进行一些扩展。例如多语言的支持，SEO的改善，分享时候的图片展示以及其他的我想到的新功能等等，当然也不仅仅局限于展示自己的文章。（其实多语言已经在About页面简单的实现了，但只是对那一个页面有效）
+
+折腾永无止境，希望这个版本能够健康运行！

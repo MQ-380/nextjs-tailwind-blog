@@ -11,6 +11,7 @@ import 'remark-github-blockquote-alert/alert.css';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import SectionContainer from '@/components/SectionContainer';
+import { unregister } from '@/components/serviceWorker';
 
 import siteMetadata from '@/data/siteMetadata';
 
@@ -61,6 +62,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const basePath = process.env.BASE_PATH || '';
+  unregister();
 
   return (
     <html

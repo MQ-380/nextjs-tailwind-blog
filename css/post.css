@@ -29,4 +29,10 @@ article {
     color: #868686;
     margin: 0 0 1rem;
   }
+
+  pre:has(code) {
+    background-color: rgb(1, 1, 35);
+    padding: 1rem 2rem;
+    border-radius: 0.5rem;
+  }
 }

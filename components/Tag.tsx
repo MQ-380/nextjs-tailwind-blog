@@ -38,7 +38,7 @@ const Tag = ({ text }: Props) => {
 
   return (
     <Link
-      href={`/tags/${slug(tagsInfo[text]?.id)}`}
+      href={`/tags/${slug(tagsInfo[text.toLocaleLowerCase()]?.id)}`}
       className={`mr-3 rounded-full px-2 text-sm font-medium ${bg} ${textColor} transition-colors duration-200 hover:opacity-80`}
     >
       {text}

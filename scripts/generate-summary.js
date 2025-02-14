@@ -9,7 +9,6 @@ async function generateSummary() {
   try {
     // 读取所有 MDX 文件
     const files = await fs.readdir(POSTS_DIR)
-    console.log(files);
     const mdxFiles = files.filter(file => file.endsWith('.mdx'))
 
     for (const file of mdxFiles) {
@@ -38,7 +37,6 @@ async function generateSummary() {
       // 写回文件
       await fs.writeFile(filePath, updatedContent)
       
-      console.log(`✓ Updated summary for ${file}`)
     }
   } catch (error) {
     console.error('Error:', error)

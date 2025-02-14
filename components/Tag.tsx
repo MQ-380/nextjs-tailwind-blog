@@ -6,8 +6,7 @@ import { slug } from 'github-slugger';
 interface Props {
   text: string;
 }
-
-const tags = tagData as Record<string, { count: number; id: string }>;
+const tagsInfo = tagData as Record<string, { count: number; id: string }>;
 
 const Tag = ({ text }: Props) => {
   // 简单的字符串哈希函数
@@ -39,7 +38,7 @@ const Tag = ({ text }: Props) => {
 
   return (
     <Link
-      href={`/tags/${slug(tags[text].id)}`}
+      href={`/tags/${slug(tagsInfo[text]?.id)}`}
       className={`mr-3 rounded-full px-2 text-sm font-medium ${bg} ${textColor} transition-colors duration-200 hover:opacity-80`}
     >
       {text}

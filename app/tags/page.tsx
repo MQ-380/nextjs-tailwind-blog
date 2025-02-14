@@ -21,7 +21,6 @@ export default async function Page() {
         <div className="flex max-w-lg flex-wrap">
           {tagKeys.length === 0 && 'No Tags Found'}
           {sortedTags.map((tag) => {
-            console.log(`/tags/${tagCounts[tag].id}`);
             return (
               <div key={tag} className="mt-2 mr-5 mb-2">
                 <Tag text={tag} />

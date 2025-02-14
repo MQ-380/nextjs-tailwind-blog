@@ -1,23 +1,22 @@
-import "@/css/prism.css";
-import "@/css/post.css";
-import "katex/dist/katex.css";
+import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 
-import { allPosts, Post } from "@/.contentlayer/generated";
-import PostBanner from "@/layouts/PostBanner";
-import PostLayout from "@/layouts/PostLayout";
-import PostSimple from "@/layouts/PostSimple";
-import { notFound } from "next/navigation";
-import { MDXLayoutRenderer } from "pliny/mdx-components.js";
-import {
-  allCoreContent,
-  coreContent,
-  sortPosts,
-} from "pliny/utils/contentlayer.js";
-import { components } from "@/components/posts/MDXComponents";
-import { Metadata } from "next";
-import siteMetadata from "@/data/siteMetadata";
+import 'katex/dist/katex.css';
+import { MDXLayoutRenderer } from 'pliny/mdx-components.js';
+import { allCoreContent, coreContent, sortPosts } from 'pliny/utils/contentlayer.js';
 
-const defaultLayout = "PostLayout" as const;
+import { components } from '@/components/posts/MDXComponents';
+
+import siteMetadata from '@/data/siteMetadata';
+
+import { Post, allPosts } from '@/.contentlayer/generated';
+import '@/css/post.css';
+import '@/css/prism.css';
+import PostBanner from '@/layouts/PostBanner';
+import PostLayout from '@/layouts/PostLayout';
+import PostSimple from '@/layouts/PostSimple';
+
+const defaultLayout = 'PostLayout' as const;
 const layouts = {
   PostSimple,
   PostLayout,
@@ -25,11 +24,9 @@ const layouts = {
 } as const;
 type LayoutKeys = keyof typeof layouts;
 
-export default async function Page(props: {
-  params: Promise<{ slug: string[] }>;
-}) {
+export default async function Page(props: { params: Promise<{ slug: string[] }> }) {
   const params = await props.params;
-  const slug = decodeURI(params.slug.join("/"));
+  const slug = decodeURI(params.slug.join('/'));
 
   const sortedCoreContents = allCoreContent(sortPosts(allPosts));
 
@@ -45,10 +42,9 @@ export default async function Page(props: {
   const post = allPosts.find((p) => p.slug === slug) as Post;
   const mainContent = coreContent(post);
   // Fix for the existed posts.
-  const postLayout = post.layout === "post" ? defaultLayout : post.layout;
+  const postLayout = post.layout === 'post' ? defaultLayout : post.layout;
   const Layout = layouts[(postLayout || defaultLayout) as LayoutKeys];
 
-  console.log(post.layout || defaultLayout);
   return (
     <div className="article">
       <script
@@ -58,11 +54,7 @@ export default async function Page(props: {
         }}
       />
       <Layout content={mainContent} next={next} prev={prev}>
-        <MDXLayoutRenderer
-          code={post.body.code}
-          components={components}
-          toc={post.toc}
-        />
+        <MDXLayoutRenderer code={post.body.code} components={components} toc={post.toc} />
       </Layout>
     </div>
   );
@@ -72,7 +64,7 @@ export async function generateMetadata(props: {
   params: Promise<{ slug: string[] }>;
 }): Promise<Metadata | undefined> {
   const params = await props.params;
-  const slug = decodeURI(params.slug.join("/"));
+  const slug = decodeURI(params.slug.join('/'));
   const post = allPosts.find((p) => p.slug === slug);
   if (!post) {
     return;
@@ -82,11 +74,11 @@ export async function generateMetadata(props: {
   const modifiedAt = new Date(post.lastmod || post.date).toISOString();
   let imageList = [siteMetadata.socialBanner];
   if (post.images) {
-    imageList = typeof post.images === "string" ? [post.images] : post.images;
+    imageList = typeof post.images === 'string' ? [post.images] : post.images;
   }
   const ogImages = imageList.map((img) => {
     return {
-      url: img.includes("http") ? img : siteMetadata.siteUrl + img,
+      url: img.includes('http') ? img : siteMetadata.siteUrl + img,
     };
   });
 
@@ -97,15 +89,15 @@ export async function generateMetadata(props: {
       title: post.title,
       description: post.summary,
       siteName: siteMetadata.title,
-      locale: "en_US",
-      type: "article",
+      locale: 'en_US',
+      type: 'article',
       publishedTime: publishedAt,
       modifiedTime: modifiedAt,
-      url: "./",
+      url: './',
       images: ogImages,
     },
     twitter: {
-      card: "summary_large_image",
+      card: 'summary_large_image',
       title: post.title,
       description: post.summary,
       images: imageList,

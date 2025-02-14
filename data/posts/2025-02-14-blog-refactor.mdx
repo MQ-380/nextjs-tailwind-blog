@@ -118,55 +118,53 @@ mdx因为需要支持html的标签等内容，所以有一些特殊字符不能�
 
 因为blog中需要用到summary，而自己之前的文章中，并没有summary的这个tag，导致了没有在首页上的文章预览。自己一个个加入又太累了，所以利用了Copilot的功能，写出了一个批处理文件，能够自动加入所有的summary，极大的缩短了自己的工作量。
 
-````javascript
-import fs from 'fs/promises'
-import path from 'path'
-import matter from 'gray-matter'
+```javascript
+import fs from 'fs/promises';
+import matter from 'gray-matter';
+import path from 'path';
 
-const POSTS_DIR = './data/posts'
-const SUMMARY_LENGTH = 100
+const POSTS_DIR = './data/posts';
+const SUMMARY_LENGTH = 100;
 
 async function generateSummary() {
   try {
     // 读取所有 MDX 文件
-    const files = await fs.readdir(POSTS_DIR)
-    console.log(files);
-    const mdxFiles = files.filter(file => file.endsWith('.mdx'))
+    const files = await fs.readdir(POSTS_DIR);
+    const mdxFiles = files.filter((file) => file.endsWith('.mdx'));
 
     for (const file of mdxFiles) {
-      const filePath = path.join(POSTS_DIR, file)
-      const content = await fs.readFile(filePath, 'utf8')
+      const filePath = path.join(POSTS_DIR, file);
+      const content = await fs.readFile(filePath, 'utf8');
 
       // 解析 frontmatter 和内容
-      const { data, content: mdxContent } = matter(content)
+      const { data, content: mdxContent } = matter(content);
 
       // 提取纯文本内容（移除 markdown 标记和代码块）
       let plainText = mdxContent
-        .replace(/```[\s\S]*?```/g, '') // 移除代码块
+        .replace(/``[\s\S]*?``/g, '') // 移除代码块（应为三点）
         .replace(/\[.*?\]\(.*?\)/g, '$1') // 将链接转换为纯文本
         .replace(/[#*`_]/g, '') // 移除 markdown 标记
-        .trim()
+        .trim();
 
       // 提取前 100 个字符作为摘要
-      const summary = plainText.slice(0, SUMMARY_LENGTH) + '...'
+      const summary = plainText.slice(0, SUMMARY_LENGTH) + '...';
 
       // 更新 frontmatter
-      data.summary = summary
+      data.summary = summary;
 
       // 重新组合内容
-      const updatedContent = matter.stringify(mdxContent, data)
+      const updatedContent = matter.stringify(mdxContent, data);
 
       // 写回文件
-      await fs.writeFile(filePath, updatedContent)
-
-      console.log(`✓ Updated summary for ${file}`)
+      await fs.writeFile(filePath, updatedContent);
+      console.log(`✓ Updated summary for ${file}`);
     }
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error:', error);
   }
 }
 
-generateSummary()
+generateSummary();
 ```
 
 ### Tailwind CSS
@@ -224,7 +222,7 @@ const useTagLevel = (itemRef: RefObject<HTMLLIElement | null>) => {
   return level;
 };
 
-````
+```
 
 利用自定义的Hook来获取层级，来正确展示这个元素。后来发现对于H1，H2之类的MDX中利用固有元素的进行定义大小的东西也需要自己写，我就换用了自己覆盖CSS的方法来进行实现，减少复杂度了。
 
@@ -247,3 +245,7 @@ const useTagLevel = (itemRef: RefObject<HTMLLIElement | null>) => {
 所以接下来或许还会对这个blog进行一些扩展。例如多语言的支持，SEO的改善，分享时候的图片展示以及其他的我想到的新功能等等，当然也不仅仅局限于展示自己的文章。（其实多语言已经在About页面简单的实现了，但只是对那一个页面有效）
 
 折腾永无止境，希望这个版本能够健康运行！
+
+```
+
+```

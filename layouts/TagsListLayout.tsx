@@ -3,7 +3,6 @@
 import { useState } from 'react';
 
 import tagData from 'app/tag-data.json';
-import { slug } from 'github-slugger';
 import { CoreContent } from 'pliny/utils/contentlayer.js';
 import { formatDate } from 'pliny/utils/formatDate.js';
 
@@ -25,9 +24,9 @@ const POSTS_PER_PAGE = 10;
 export default function TagsListLayout({ posts, title }: ListLayoutProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
-  const tagCounts = tagData as Record<string, number>;
+  const tagCounts = tagData as Record<string, { count: number; id: string }>;
   const tagKeys = Object.keys(tagCounts);
-  const sortedTags = tagKeys.sort((a, b) => tagCounts[b] - tagCounts[a]);
+  const sortedTags = tagKeys.sort((a, b) => tagCounts[b].count - tagCounts[a].count);
 
   const displayPosts = posts.slice(
     (currentPage - 1) * POSTS_PER_PAGE,
@@ -53,14 +52,15 @@ export default function TagsListLayout({ posts, title }: ListLayoutProps) {
               </Link>
               <ul>
                 {sortedTags.map((t) => {
+                  const { id, count } = tagCounts[t];
                   return (
                     <li key={t} className="my-3">
                       <Link
-                        href={`/tags/${slug(t)}`}
+                        href={`/tags/${id}`}
                         className="hover:text-primary-500 dark:hover:text-primary-500 px-3 py-2 text-sm font-medium text-gray-500 uppercase dark:text-gray-300"
                         aria-label={`View posts tagged ${t}`}
                       >
-                        {`${t} (${tagCounts[t]})`}
+                        {`${t} (${count})`}
                       </Link>
                     </li>
                   );

@@ -24,10 +24,31 @@ public/static/images/gallery/
 
   没有配置 caption 的照片，hover 时只显示 tag。
 
-添加/删除照片后运行：
+## 添加照片的完整流程
 
 ```bash
-npm run generate-gallery
+# 1. 把照片拷进对应的 tag 目录（新 tag 直接新建文件夹即可）
+cp ~/Pictures/羽田/*.jpg public/static/images/gallery/planes/
+
+# 2. 压缩：缩到长边 2560px、重新编码、剥掉 EXIF（含 GPS 定位）
+npm run compress-gallery
+
+# 3. 提交（manifest 会在 dev/build 时自动重新生成，也可手动跑 npm run generate-gallery）
+git add public/static/images/gallery app/gallery-data.json
+git commit -m "add: 新增羽田机场照片"
 ```
 
-会重新扫描这个目录并生成 `app/gallery-data.json`。这个脚本也接到了 `predev` / `prebuild`，本地跑 `npm run dev` 或部署到 Vercel 跑 `npm run build` 时都会自动执行一次，正常情况不需要手动跑。
+## 关于压缩
+
+`npm run compress-gallery` 会**就地修改**源文件，请在提交前跑，不要接进 build。
+
+- **为什么必须压**：`next/image` 只优化传输（浏览器拿到的是缩放过的 WebP），但原图会原样进 git 仓库。相机直出动辄 15MB 一张，几百张就会让仓库大到难以克隆。实测一张 6000×4000 的原图 15.5MB → 814KB，省 95%。
+- **顺带剥掉 EXIF**：手机和相机会把 GPS 坐标写进照片。旅行和拍飞机的照片一旦公开发布，等于公开了拍摄地点。脚本重新编码时会去掉全部元数据。
+- **可以反复跑**：已经处理过的照片（尺寸达标且无 EXIF）会自动跳过，不会重复压缩导致画质逐次劣化。
+- **参数**：长边上限 2560px、JPEG 质量 82。想调整改 `scripts/compress-gallery.js` 顶部的常量即可。
+
+## 关于 manifest
+
+`app/gallery-data.json` 由 `npm run generate-gallery` 扫描本目录生成，记录每张照片的路径、tag、尺寸和图注。该脚本已挂到 `predev` / `prebuild`，本地 `npm run dev` 和 Vercel 部署时都会自动执行，正常情况不需要手动跑。
+
+注意 `components/Header.tsx` 会读取这个文件——**没有照片时导航栏不会显示 Gallery 入口**。

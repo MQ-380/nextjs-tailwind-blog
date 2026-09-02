@@ -11,7 +11,8 @@
     "lint": "next lint",
     "build:contentlayer": "contentlayer2 build",
     "generate-summary": "bash scripts/generate-summary.sh",
-    "generate-gallery": "node scripts/generate-gallery.js"
+    "generate-gallery": "node scripts/generate-gallery.js",
+    "compress-gallery": "node scripts/compress-gallery.js"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.0",
@@ -60,6 +61,7 @@
     "postcss": "^8.5.1",
     "prettier": "^3.4.2",
     "prettier-plugin-tailwindcss": "^0.6.11",
+    "sharp": "^0.35.4",
     "typescript": "^5"
   }
 }

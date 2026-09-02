@@ -6,7 +6,9 @@
 # 手动配置：git config core.hooksPath .githooks
 # 临时跳过：git commit --no-verify
 
-if ! git diff --cached --name-only --diff-filter=ACM -- public/static/images/gallery | grep -qiE '\.(jpg|jpeg|png)$'; then
+# 只做“有没有动到相册目录”的快速判断，具体哪些格式要处理交给脚本决定，
+# 避免格式列表在这里和 scripts/gallery-config.js 之间产生分歧。
+if [ -z "$(git diff --cached --name-only --diff-filter=ACM -- public/static/images/gallery)" ]; then
   exit 0
 fi
 

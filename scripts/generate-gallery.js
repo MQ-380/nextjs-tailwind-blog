@@ -2,11 +2,11 @@ import fs from 'fs/promises';
 import { imageSizeFromFile } from 'image-size/fromFile';
 import path from 'path';
 
+import { GALLERY_DIR, INDEXABLE_EXT } from './gallery-config.js';
+
 // 每张照片放在 public/static/images/gallery/<tag>/ 下，
 // 文件夹名即为该照片的 tag（飞机 / 城市名 / 任意分类），支持中文文件夹名。
-const GALLERY_DIR = 'public/static/images/gallery';
 const OUTPUT_FILE = 'app/gallery-data.json';
-const IMAGE_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif', '.gif']);
 
 async function readCaptions(tagDir) {
   try {
@@ -39,7 +39,7 @@ async function generateGallery() {
     for (const file of files) {
       if (!file.isFile()) continue;
       const ext = path.extname(file.name).toLowerCase();
-      if (!IMAGE_EXT.has(ext)) continue;
+      if (!INDEXABLE_EXT.has(ext)) continue;
 
       const filePath = path.join(tagDir, file.name);
       const [stat, dimensions] = await Promise.all([

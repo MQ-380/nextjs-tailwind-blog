@@ -3,12 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks || true",
+    "predev": "npm run generate-gallery",
     "dev": "next dev --turbopack",
+    "prebuild": "npm run generate-gallery",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "build:contentlayer": "contentlayer2 build",
-    "generate-summary": "bash scripts/generate-summary.sh"
+    "generate-summary": "bash scripts/generate-summary.sh",
+    "generate-gallery": "node scripts/generate-gallery.js",
+    "compress-gallery": "node scripts/compress-gallery.js"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.0",
@@ -53,9 +58,11 @@
     "eslint": "^9",
     "eslint-config-next": "15.1.6",
     "gray-matter": "^4.0.3",
+    "image-size": "^2.0.2",
     "postcss": "^8.5.1",
     "prettier": "^3.4.2",
     "prettier-plugin-tailwindcss": "^0.6.11",
+    "sharp": "^0.35.4",
     "typescript": "^5"
   }
 }

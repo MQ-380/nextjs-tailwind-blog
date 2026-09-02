@@ -1,32 +1,34 @@
-'use client'
+'use client';
 
-import { Fragment, useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react';
 
-import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react'
-import { clearAllBodyScrollLocks, disableBodyScroll, enableBodyScroll } from 'body-scroll-lock'
+import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
+import { clearAllBodyScrollLocks, disableBodyScroll, enableBodyScroll } from 'body-scroll-lock';
 
-import { headerNavLinks } from '@/data/headerNavLinks'
+import { EvenOdd } from '@/icons/iconsSvg';
 
-import { EvenOdd } from '@/icons/iconsSvg'
+import Link from './Link';
 
-import Link from './Link'
+interface Props {
+  navLinks: { href: string; title: string }[];
+}
 
-export default function MobileNav() {
-  const [showNav, setShowNav] = useState(false)
-  const navRef = useRef(null)
+export default function MobileNav({ navLinks }: Props) {
+  const [showNav, setShowNav] = useState(false);
+  const navRef = useRef(null);
 
   const handleToggleNav = () => {
     setShowNav((status) => {
       if (status) {
-        enableBodyScroll(navRef.current!)
+        enableBodyScroll(navRef.current!);
       } else {
-        disableBodyScroll(navRef.current!)
+        disableBodyScroll(navRef.current!);
       }
-      return !status
-    })
-  }
+      return !status;
+    });
+  };
 
-  useEffect(() => clearAllBodyScrollLocks)
+  useEffect(() => clearAllBodyScrollLocks);
 
   return (
     <>
@@ -64,7 +66,7 @@ export default function MobileNav() {
                 ref={navRef}
                 className="mt-8 flex h-full basis-0 flex-col items-start overflow-y-auto pt-2 pl-12 text-left"
               >
-                {headerNavLinks.map((link) => (
+                {navLinks.map((link) => (
                   <Link
                     key={link.title}
                     href={link.href}
@@ -94,5 +96,5 @@ export default function MobileNav() {
         </Dialog>
       </Transition>
     </>
-  )
+  );
 }

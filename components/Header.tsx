@@ -4,6 +4,8 @@ import Logo from '@/data/avatar.jpeg';
 import { headerNavLinks } from '@/data/headerNavLinks';
 import siteMetadata from '@/data/siteMetadata';
 
+import galleryData from '@/app/gallery-data.json';
+
 import Link from './Link';
 import MobileNav from './MobileNav';
 import ThemeSwitch from './ThemeSwitch';
@@ -12,6 +14,10 @@ export default function Header() {
   const headerClass =
     'flex item-center w-full bg-white dark:bg-gray-950 justify-between py-10 sticky top-0 z-50';
   const { headerTitle } = siteMetadata;
+  // 没有照片时不展示相册入口。在服务端组件里过滤，避免整份照片清单被打进客户端包
+  const navLinks = headerNavLinks.filter(
+    (link) => link.href !== '/gallery' || galleryData.length > 0
+  );
 
   return (
     <header className={headerClass}>
@@ -28,7 +34,7 @@ export default function Header() {
 
       <div className="flex items-center space-x-4 leading-5 sm:space-x-6">
         <div className="no-scrollbar hidden items-center space-x-6 overflow-x-auto pr-2 sm:flex sm:space-x-6">
-          {headerNavLinks.map((link) => (
+          {navLinks.map((link) => (
             <Link
               key={link.title}
               href={link.href}
@@ -39,7 +45,7 @@ export default function Header() {
           ))}
         </div>
         <ThemeSwitch />
-        <MobileNav />
+        <MobileNav navLinks={navLinks} />
       </div>
     </header>
   );

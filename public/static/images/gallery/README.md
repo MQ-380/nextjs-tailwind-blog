@@ -30,17 +30,29 @@ public/static/images/gallery/
 # 1. 把照片拷进对应的 tag 目录（新 tag 直接新建文件夹即可）
 cp ~/Pictures/羽田/*.jpg public/static/images/gallery/planes/
 
-# 2. 压缩：缩到长边 2560px、重新编码、剥掉 EXIF（含 GPS 定位）
-npm run compress-gallery
-
-# 3. 提交（manifest 会在 dev/build 时自动重新生成，也可手动跑 npm run generate-gallery）
+# 2. 提交。pre-commit 钩子会自动压缩暂存的照片并重新暂存，
+#    进入提交的就是压缩后的版本
 git add public/static/images/gallery app/gallery-data.json
 git commit -m "add: 新增羽田机场照片"
 ```
 
+manifest 会在 `npm run dev` / `npm run build` 时自动重新生成，也可手动跑 `npm run generate-gallery`。
+
 ## 关于压缩
 
-`npm run compress-gallery` 会**就地修改**源文件，请在提交前跑，不要接进 build。
+压缩由 `.githooks/pre-commit` 在提交时自动完成，无需手动操作。也可以随时手动跑：
+
+```bash
+npm run compress-gallery            # 处理目录下全部照片
+npm run compress-gallery -- --staged  # 只处理暂存的照片（钩子用的就是这个）
+```
+
+钩子通过 `core.hooksPath` 生效，`npm install` 时会自动配置（见 package.json 的 `prepare`）。
+手动配置用 `git config core.hooksPath .githooks`，想临时跳过用 `git commit --no-verify`。
+
+**注意钩子只能防住未来的提交**——大图一旦进了 git 历史就会永久留在里面，仓库体积降不下来（除非用 `git filter-repo` 之类改写历史）。
+
+脚本会**就地修改**源文件，所以刻意没有接进 build。
 
 - **为什么必须压**：`next/image` 只优化传输（浏览器拿到的是缩放过的 WebP），但原图会原样进 git 仓库。相机直出动辄 15MB 一张，几百张就会让仓库大到难以克隆。实测一张 6000×4000 的原图 15.5MB → 814KB，省 95%。
 - **顺带剥掉 EXIF**：手机和相机会把 GPS 坐标写进照片。旅行和拍飞机的照片一旦公开发布，等于公开了拍摄地点。脚本重新编码时会去掉全部元数据。

@@ -1,0 +1,17 @@
+#!/bin/sh
+# 提交前压缩暂存的相册照片：缩到长边 2560px、重新编码、剥掉 EXIF（含 GPS 定位），
+# 压完自动重新暂存。没有暂存照片时会立刻退出，不影响其他提交。
+#
+# 由 core.hooksPath 指向本目录后生效，npm install 时会自动配置（见 package.json 的 prepare）。
+# 手动配置：git config core.hooksPath .githooks
+# 临时跳过：git commit --no-verify
+
+if ! git diff --cached --name-only --diff-filter=ACM -- public/static/images/gallery | grep -qiE '\.(jpg|jpeg|png)$'; then
+  exit 0
+fi
+
+echo "[pre-commit] 压缩暂存的相册照片…"
+if ! node scripts/compress-gallery.js --staged; then
+  echo "[pre-commit] 压缩失败，已中止提交。修复后重试，或用 git commit --no-verify 跳过。" >&2
+  exit 1
+fi

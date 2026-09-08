@@ -3,12 +3,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import Image from 'next/image';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import GalleryLightbox from './GalleryLightbox';
-import type { GalleryPhoto } from './types';
+import { type GalleryPhoto, describePhoto } from './types';
 
 interface Props {
   photos: GalleryPhoto[];
+  /**
+   * 不展示的筛选分组（按字段名，如 `航司`）。
+   * 航司详情页整页都是同一家，再列「航司」筛选没有意义。
+   */
+  excludeFacets?: string[];
 }
 
 const ALL = 'all';
@@ -17,30 +23,113 @@ const BATCH_SIZE = 24;
 /** 距离底部多远开始预加载下一批 */
 const PRELOAD_MARGIN = '600px';
 
-export default function GalleryGrid({ photos }: Props) {
-  const [activeTag, setActiveTag] = useState<string>(ALL);
+export default function GalleryGrid({ photos, excludeFacets = [] }: Props) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // 筛选状态从 URL 还原：航司目录页靠 ?tag=航司:United 链进来，
+  // 同时也让任何一组筛选结果变成可分享的链接。
+  const [activeTag, setActiveTag] = useState<string>(() => searchParams.get('cat') ?? ALL);
+  const [activeLabels, setActiveLabels] = useState<string[]>(() => searchParams.getAll('tag'));
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
   const columnCount = useColumnCount();
   const mounted = useMounted();
 
-  const tags = useMemo(() => {
-    const counts = new Map<string, number>();
-    photos.forEach((photo) => counts.set(photo.tag, (counts.get(photo.tag) ?? 0) + 1));
-    return Array.from(counts.entries())
-      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'zh'))
-      .map(([tag, count]) => ({ tag, count }));
-  }, [photos]);
+  const tags = useMemo(() => countBy(photos, (photo) => [photo.tag]), [photos]);
+  // 只有一个分类时「全部 9 / planes 9」是废话，整组不展示
+  const showCategories = tags.length > 1;
+  // 默认值 [] 每次渲染都是新数组，用内容当依赖，避免 memo 白重算
+  const excludeKey = excludeFacets.join('|');
 
-  const filteredPhotos = useMemo(
+  // 选中分类后的照片，附加标签的可选项和计数都基于它算，
+  // 这样不会出现「选了东京还列着只在大阪出现的机型」这种死选项。
+  const photosInTag = useMemo(
     () => (activeTag === ALL ? photos : photos.filter((photo) => photo.tag === activeTag)),
     [photos, activeTag]
   );
 
-  const selectTag = useCallback((tag: string) => {
-    setActiveTag(tag);
-    setVisibleCount(BATCH_SIZE);
-  }, []);
+  // 多个附加标签之间取交集：选了 ANA 又选 787，只留下 ANA 的 787
+  const filteredPhotos = useMemo(
+    () =>
+      activeLabels.length === 0
+        ? photosInTag
+        : photosInTag.filter((photo) => activeLabels.every((label) => photo.tags.includes(label))),
+    [photosInTag, activeLabels]
+  );
+
+  // 标签形如 `航司:United`，按冒号前的字段名分组，侧边栏就能显示成
+  // 「航司」「机型」「机场」几个带标题的区块。
+  //
+  // 计数是「在当前选择基础上再叠加这个标签后还剩几张」，已选中的显示当前结果数。
+  // 归零的标签直接不展示，否则会出现 United 已选中却还能点 Delta、
+  // 点完一张不剩且页面空白的情况。
+  const labelGroups = useMemo(() => {
+    const groups = new Map<string, { name: string; label: string; count: number }[]>();
+
+    const names = new Set<string>();
+    photosInTag.forEach((photo) => photo.tags.forEach((tag) => names.add(tag)));
+
+    Array.from(names).forEach((name) => {
+      const combined = activeLabels.includes(name) ? activeLabels : [...activeLabels, name];
+      const count = photosInTag.filter((photo) =>
+        combined.every((label) => photo.tags.includes(label))
+      ).length;
+      if (count === 0 && !activeLabels.includes(name)) return;
+
+      const separator = name.indexOf(':');
+      const group = separator > 0 ? name.slice(0, separator) : '标签';
+      const label = separator > 0 ? name.slice(separator + 1) : name;
+      if (excludeKey.split('|').includes(group)) return;
+      if (!groups.has(group)) groups.set(group, []);
+      groups.get(group)!.push({ name, label, count });
+    });
+
+    groups.forEach((items) =>
+      items.sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, 'zh'))
+    );
+    return Array.from(groups, ([title, items]) => ({ title, items }));
+  }, [photosInTag, activeLabels, excludeKey]);
+
+  // 把筛选状态同步回 URL。replace 而非 push，免得筛几下就塞满浏览器历史；
+  // scroll: false 保持当前滚动位置。
+  const syncUrl = useCallback(
+    (tag: string, labels: string[]) => {
+      const params = new URLSearchParams();
+      if (tag !== ALL) params.set('cat', tag);
+      labels.forEach((label) => params.append('tag', label));
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    },
+    [router, pathname]
+  );
+
+  const selectTag = useCallback(
+    (tag: string) => {
+      setActiveTag(tag);
+      setActiveLabels([]);
+      setVisibleCount(BATCH_SIZE);
+      syncUrl(tag, []);
+    },
+    [syncUrl]
+  );
+
+  const toggleLabel = useCallback(
+    (label: string) => {
+      // 先在事件处理里算出新值再 set，不要把 syncUrl 放进 setState 的 updater：
+      // updater 是在渲染阶段执行的（严格模式下还会执行两次），
+      // 在里面调 router.replace 会触发
+      // "Cannot update a component (Router) while rendering a different component"。
+      const next = activeLabels.includes(label)
+        ? activeLabels.filter((l) => l !== label)
+        : [...activeLabels, label];
+      setActiveLabels(next);
+      setVisibleCount(BATCH_SIZE);
+      syncUrl(activeTag, next);
+    },
+    [syncUrl, activeTag, activeLabels]
+  );
 
   const visiblePhotos = useMemo(
     () => filteredPhotos.slice(0, visibleCount),
@@ -77,62 +166,74 @@ export default function GalleryGrid({ photos }: Props) {
     );
   }
 
-  const filterItems = [{ tag: ALL, label: '全部', count: photos.length }].concat(
-    tags.map(({ tag, count }) => ({ tag, label: tag, count }))
+  const categories = [{ name: ALL, label: '全部', count: photos.length }].concat(
+    tags.map(({ name, count }) => ({ name, label: name, count }))
   );
 
   return (
     <div>
       {/* 移动端：横向滚动的标签条 */}
-      <div className="no-scrollbar -mx-4 mb-6 flex gap-2 overflow-x-auto px-4 pb-1 sm:hidden">
-        {filterItems.map(({ tag, label, count }) => (
-          <button
-            key={tag}
-            type="button"
-            onClick={() => selectTag(tag)}
-            className={`shrink-0 rounded-full px-3 py-1 text-sm font-medium transition-colors duration-200 ${
-              activeTag === tag
-                ? 'bg-primary-500 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
-            }`}
+      <div className="sm:hidden">
+        {showCategories && (
+          <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+            {categories.map(({ name, label, count }) => (
+              <Pill key={name} active={activeTag === name} onClick={() => selectTag(name)}>
+                {label} ({count})
+              </Pill>
+            ))}
+          </div>
+        )}
+        {labelGroups.map(({ title, items }) => (
+          <div
+            key={title}
+            className="no-scrollbar -mx-4 mt-2 flex items-center gap-2 overflow-x-auto px-4 pb-1"
           >
-            {label} ({count})
-          </button>
+            <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500">{title}</span>
+            {items.map(({ name, label, count }) => (
+              <Pill
+                key={name}
+                active={activeLabels.includes(name)}
+                onClick={() => toggleLabel(name)}
+                subtle
+              >
+                {label} ({count})
+              </Pill>
+            ))}
+          </div>
         ))}
       </div>
+      <div className="mb-6 sm:mb-0" />
 
       <div className="flex gap-8">
         {/* 桌面端：固定在侧边的标签栏 */}
         <aside className="hidden sm:block">
-          <nav className="sticky top-24 max-h-[calc(100vh-8rem)] w-36 overflow-y-auto lg:w-44">
-            <ul className="space-y-1">
-              {filterItems.map(({ tag, label, count }) => (
-                <li key={tag}>
-                  <button
-                    type="button"
-                    onClick={() => selectTag(tag)}
-                    className={`flex w-full items-center justify-between gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 ${
-                      activeTag === tag
-                        ? 'bg-primary-500 text-white'
-                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100'
-                    }`}
-                  >
-                    <span className="truncate">{label}</span>
-                    <span
-                      className={
-                        activeTag === tag ? 'text-white/70' : 'text-gray-400 dark:text-gray-500'
-                      }
-                    >
-                      {count}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+          <nav className="sticky top-24 max-h-[calc(100vh-8rem)] w-36 space-y-5 overflow-y-auto lg:w-44">
+            {showCategories && (
+              <SidebarGroup
+                items={categories.map(({ name, label, count }) => ({ name, label, count }))}
+                isActive={(name) => activeTag === name}
+                onSelect={selectTag}
+              />
+            )}
+            {labelGroups.map(({ title, items }) => (
+              <SidebarGroup
+                key={title}
+                title={title}
+                items={items}
+                isActive={(name) => activeLabels.includes(name)}
+                onSelect={toggleLabel}
+              />
+            ))}
           </nav>
         </aside>
 
         <div className="min-w-0 flex-1">
+          {/* 计数归零的标签已经不展示，正常点不出空结果；这里兜底，避免万一时页面全白 */}
+          {filteredPhotos.length === 0 && (
+            <p className="py-8 text-sm text-gray-500 dark:text-gray-400">
+              没有符合条件的照片，试试取消几个标签。
+            </p>
+          )}
           {mounted ? (
             // 挂载后：按最短列分配，追加新一批时不会打乱已渲染的照片
             <div className="flex gap-4">
@@ -201,7 +302,7 @@ function PhotoCard({
     >
       <Image
         src={photo.src}
-        alt={photo.caption ?? photo.tag}
+        alt={describePhoto(photo)}
         width={photo.width}
         height={photo.height}
         priority={priority}
@@ -209,13 +310,94 @@ function PhotoCard({
         sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 30vw, (min-width: 640px) 45vw, 50vw"
       />
       <div className="pointer-events-none absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/70 via-black/0 to-black/0 p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-        {photo.caption && (
-          <span className="text-left text-sm font-medium text-white">{photo.caption}</span>
-        )}
-        <span className="text-left text-xs text-white/70">{photo.tag}</span>
+        <span className="text-left text-sm font-medium text-white">{describePhoto(photo)}</span>
       </div>
     </button>
   );
+}
+
+function Pill({
+  active,
+  subtle,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  subtle?: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`shrink-0 rounded-full px-3 py-1 font-medium transition-colors duration-200 ${
+        subtle ? 'text-xs' : 'text-sm'
+      } ${
+        active
+          ? 'bg-primary-500 text-white'
+          : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function SidebarGroup({
+  title,
+  items,
+  isActive,
+  onSelect,
+}: {
+  title?: string;
+  items: { name: string; label: string; count: number }[];
+  isActive: (name: string) => boolean;
+  onSelect: (name: string) => void;
+}) {
+  return (
+    <div>
+      {title && (
+        <h2 className="px-3 pb-1 text-xs tracking-wide text-gray-400 uppercase dark:text-gray-500">
+          {title}
+        </h2>
+      )}
+      <ul className="space-y-1">
+        {items.map(({ name, label, count }) => {
+          const active = isActive(name);
+          return (
+            <li key={name}>
+              <button
+                type="button"
+                onClick={() => onSelect(name)}
+                className={`flex w-full items-center justify-between gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+                  active
+                    ? 'bg-primary-500 text-white'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100'
+                }`}
+              >
+                <span className="truncate">{label}</span>
+                <span className={active ? 'text-white/70' : 'text-gray-400 dark:text-gray-500'}>
+                  {count}
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+/** 按 keysOf 取出的键统计出现次数，多的在前、同数按中文排序 */
+function countBy(photos: GalleryPhoto[], keysOf: (photo: GalleryPhoto) => string[]) {
+  const counts = new Map<string, number>();
+  photos.forEach((photo) => {
+    keysOf(photo).forEach((key) => counts.set(key, (counts.get(key) ?? 0) + 1));
+  });
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'zh'))
+    .map(([name, count]) => ({ name, count }));
 }
 
 /** 把照片依次放进当前最矮的一列，高度按等宽缩放后的相对值估算 */

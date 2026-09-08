@@ -1,0 +1,184 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&family=Geist+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; }
+    a { color: oklch(0.656 0.241 354.308); text-decoration: none; }
+    a:hover { color: oklch(0.592 0.249 0.584); }
+  </style>
+</helmet>
+
+<div style="width: 375px; min-height: 900px; background: oklch(0.13 0.028 261.692); font-family: 'Source Sans 3', ui-sans-serif, system-ui, sans-serif; color: oklch(0.967 0.003 264.542); box-sizing: border-box;">
+
+  <!-- header：手机上站名已按上次修复显示出来 -->
+  <div style="display: flex; align-items: center; justify-content: space-between; padding: 24px 16px;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="width: 22px; height: 22px; border-radius: 2px; background: linear-gradient(160deg, oklch(0.55 0.13 55), oklch(0.3 0.06 250));"></div>
+      <span style="font-size: 20px; font-weight: 600;">Izumi</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 18px;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="oklch(0.707 0.022 261.325)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="oklch(0.967 0.003 264.542)" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </div>
+  </div>
+
+  <div style="padding: 8px 16px 48px;">
+    <h1 style="margin: 0; font-size: 30px; line-height: 1.1; font-weight: 800; letter-spacing: -0.02em;">航司目录</h1>
+    <p style="margin: 10px 0 0; font-size: 15px; line-height: 1.6; color: oklch(0.707 0.022 261.325);">
+      按所属联盟汇总拍到的航空公司。点任意一行进入相册。
+    </p>
+
+    <!-- 汇总数字：手机上横排贴在标题下 -->
+    <div style="display: flex; gap: 24px; padding: 18px 0 4px;">
+      <div>
+        <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 22px; font-weight: 500;">8</span>
+        <span style="margin-left: 5px; font-size: 12px; color: oklch(0.551 0.027 264.364);">航司</span>
+      </div>
+      <div>
+        <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 22px; font-weight: 500;">9</span>
+        <span style="margin-left: 5px; font-size: 12px; color: oklch(0.551 0.027 264.364);">照片</span>
+      </div>
+      <div>
+        <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 22px; font-weight: 500;">1</span>
+        <span style="margin-left: 5px; font-size: 12px; color: oklch(0.551 0.027 264.364);">机场</span>
+      </div>
+    </div>
+
+    <!-- 星空联盟 -->
+    <div style="padding-top: 26px;">
+      <div style="display: flex; align-items: baseline; gap: 8px; padding-bottom: 8px; border-bottom: 1px solid oklch(0.278 0.033 256.848);">
+        <span style="font-size: 16px; font-weight: 700;">星空联盟</span>
+        <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: oklch(0.551 0.027 264.364);">Star Alliance</span>
+        <span style="margin-left: auto; font-size: 12px; color: oklch(0.551 0.027 264.364);">4 家 · 5 张</span>
+      </div>
+      <div style="display: flex; flex-direction: column;">
+        <!-- 手机行：机型换行到第二行，整行 56px 高度满足点按目标 -->
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 8px; margin: 0 -8px; border-radius: 6px; min-height: 44px;">
+          <div style="flex-grow: 1; min-width: 0;">
+            <div style="font-size: 16px; font-weight: 600;">United</div>
+            <div style="display: flex; gap: 5px; flex-wrap: wrap; padding-top: 5px;">
+              <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; padding: 1px 6px; border: 1px solid oklch(0.278 0.033 256.848); border-radius: 4px; color: oklch(0.707 0.022 261.325);">B757-200</span>
+              <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; padding: 1px 6px; border: 1px solid oklch(0.278 0.033 256.848); border-radius: 4px; color: oklch(0.707 0.022 261.325);">B777-200ER</span>
+            </div>
+          </div>
+          <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 14px; color: oklch(0.707 0.022 261.325);">2</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="oklch(0.551 0.027 264.364)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 8px; margin: 0 -8px; border-radius: 6px; min-height: 44px; background: oklch(0.278 0.033 256.848);">
+          <div style="flex-grow: 1; min-width: 0;">
+            <div style="font-size: 16px; font-weight: 600; color: oklch(0.656 0.241 354.308);">Lufthansa</div>
+            <div style="display: flex; gap: 5px; flex-wrap: wrap; padding-top: 5px;">
+              <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; padding: 1px 6px; border: 1px solid oklch(0.373 0.034 259.733); border-radius: 4px; color: oklch(0.872 0.01 258.338);">A340-600</span>
+            </div>
+          </div>
+          <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 14px; color: oklch(0.872 0.01 258.338);">1</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="oklch(0.656 0.241 354.308)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 8px; margin: 0 -8px; border-radius: 6px; min-height: 44px;">
+          <div style="flex-grow: 1; min-width: 0;">
+            <div style="font-size: 16px; font-weight: 600;">Brussels</div>
+            <div style="display: flex; gap: 5px; flex-wrap: wrap; padding-top: 5px;">
+              <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; padding: 1px 6px; border: 1px solid oklch(0.278 0.033 256.848); border-radius: 4px; color: oklch(0.707 0.022 261.325);">A330-300</span>
+            </div>
+          </div>
+          <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 14px; color: oklch(0.707 0.022 261.325);">1</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="oklch(0.551 0.027 264.364)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 8px; margin: 0 -8px; border-radius: 6px; min-height: 44px;">
+          <div style="flex-grow: 1; min-width: 0;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 16px; font-weight: 600;">ITA</span>
+              <span style="font-size: 10px; padding: 1px 5px; border: 1px dashed oklch(0.373 0.034 259.733); border-radius: 3px; color: oklch(0.551 0.027 264.364);">待确认</span>
+            </div>
+            <div style="display: flex; gap: 5px; flex-wrap: wrap; padding-top: 5px;">
+              <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; padding: 1px 6px; border: 1px solid oklch(0.278 0.033 256.848); border-radius: 4px; color: oklch(0.707 0.022 261.325);">A330-900neo</span>
+            </div>
+          </div>
+          <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 14px; color: oklch(0.707 0.022 261.325);">1</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="oklch(0.551 0.027 264.364)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- 天合联盟 -->
+    <div style="padding-top: 26px;">
+      <div style="display: flex; align-items: baseline; gap: 8px; padding-bottom: 8px; border-bottom: 1px solid oklch(0.278 0.033 256.848);">
+        <span style="font-size: 16px; font-weight: 700;">天合联盟</span>
+        <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: oklch(0.551 0.027 264.364);">SkyTeam</span>
+        <span style="margin-left: auto; font-size: 12px; color: oklch(0.551 0.027 264.364);">1 家 · 1 张</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; padding: 10px 8px; margin: 0 -8px; border-radius: 6px; min-height: 44px;">
+        <div style="flex-grow: 1; min-width: 0;">
+          <div style="font-size: 16px; font-weight: 600;">Delta</div>
+          <div style="display: flex; gap: 5px; flex-wrap: wrap; padding-top: 5px;">
+            <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; padding: 1px 6px; border: 1px solid oklch(0.278 0.033 256.848); border-radius: 4px; color: oklch(0.707 0.022 261.325);">B757-200</span>
+          </div>
+        </div>
+        <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 14px; color: oklch(0.707 0.022 261.325);">1</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="oklch(0.551 0.027 264.364)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+
+    <!-- 寰宇一家 -->
+    <div style="padding-top: 26px;">
+      <div style="display: flex; align-items: baseline; gap: 8px; padding-bottom: 8px; border-bottom: 1px solid oklch(0.278 0.033 256.848);">
+        <span style="font-size: 16px; font-weight: 700;">寰宇一家</span>
+        <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: oklch(0.551 0.027 264.364);">oneworld</span>
+        <span style="margin-left: auto; font-size: 12px; color: oklch(0.551 0.027 264.364);">1 家 · 1 张</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; padding: 10px 8px; margin: 0 -8px; border-radius: 6px; min-height: 44px;">
+        <div style="flex-grow: 1; min-width: 0;">
+          <div style="font-size: 16px; font-weight: 600;">Qatar</div>
+          <div style="display: flex; gap: 5px; flex-wrap: wrap; padding-top: 5px;">
+            <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; padding: 1px 6px; border: 1px solid oklch(0.278 0.033 256.848); border-radius: 4px; color: oklch(0.707 0.022 261.325);">B777-300ER</span>
+          </div>
+        </div>
+        <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 14px; color: oklch(0.707 0.022 261.325);">1</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="oklch(0.551 0.027 264.364)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+
+    <!-- 无联盟 -->
+    <div style="padding-top: 26px;">
+      <div style="display: flex; align-items: baseline; gap: 8px; padding-bottom: 8px; border-bottom: 1px solid oklch(0.278 0.033 256.848);">
+        <span style="font-size: 16px; font-weight: 700; color: oklch(0.707 0.022 261.325);">无联盟</span>
+        <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: oklch(0.551 0.027 264.364);">Unaffiliated</span>
+        <span style="margin-left: auto; font-size: 12px; color: oklch(0.551 0.027 264.364);">2 家 · 2 张</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; padding: 10px 8px; margin: 0 -8px; border-radius: 6px; min-height: 44px;">
+        <div style="flex-grow: 1; min-width: 0;">
+          <div style="font-size: 16px; font-weight: 600;">Aer Lingus</div>
+          <div style="display: flex; gap: 5px; flex-wrap: wrap; padding-top: 5px;">
+            <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; padding: 1px 6px; border: 1px solid oklch(0.278 0.033 256.848); border-radius: 4px; color: oklch(0.707 0.022 261.325);">A321-200LR</span>
+          </div>
+        </div>
+        <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 14px; color: oklch(0.707 0.022 261.325);">1</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="oklch(0.551 0.027 264.364)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; padding: 10px 8px; margin: 0 -8px; border-radius: 6px; min-height: 44px;">
+        <div style="flex-grow: 1; min-width: 0;">
+          <div style="font-size: 16px; font-weight: 600;">Allegiant</div>
+          <div style="display: flex; gap: 5px; flex-wrap: wrap; padding-top: 5px;">
+            <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; padding: 1px 6px; border: 1px solid oklch(0.278 0.033 256.848); border-radius: 4px; color: oklch(0.707 0.022 261.325);">A320</span>
+          </div>
+        </div>
+        <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 14px; color: oklch(0.707 0.022 261.325);">1</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="oklch(0.551 0.027 264.364)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

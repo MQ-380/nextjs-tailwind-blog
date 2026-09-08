@@ -4,5 +4,6 @@ export const headerNavLinks = [
   { href: '/tags', title: 'Tags' },
   { href: '/timeline', title: 'Timeline' },
   { href: '/gallery', title: 'Gallery' },
+  { href: '/airlines', title: 'Airlines' },
   { href: '/about', title: 'About' },
 ];

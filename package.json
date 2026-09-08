@@ -8,6 +8,7 @@
     "dev": "next dev --turbopack",
     "prebuild": "npm run generate-gallery",
     "build": "next build",
+    "prebuild:check": "npm run generate-gallery",
     "build:check": "DIST_DIR=.next-check next build",
     "start": "next start",
     "lint": "next lint",

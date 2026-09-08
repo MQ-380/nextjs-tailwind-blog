@@ -10,7 +10,7 @@ interface Props {
  * 还没拍到的航司。它们没有机型也没有数量，占一整行是空的，
  * 所以折叠起来、展开后是一片灰色名字，不可点击。
  */
-export default function MissingAirlines({ names }: Props) {
+export default function MissingList({ names }: Props) {
   const [open, setOpen] = useState(false);
   if (names.length === 0) return null;
 

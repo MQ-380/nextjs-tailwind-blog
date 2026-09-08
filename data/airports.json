@@ -1,0 +1,60 @@
+{
+  "_说明": [
+    "机场 IATA 三字码 → 全称 / 城市 / 所在大洲。照片文件名里的机场段写代码（如 TPE），",
+    "这张表用于机库页面按大洲分组、以及机场详情页显示全称。",
+    "regions 是大洲，决定分组顺序；airport.region 引用其 id。只分到大洲，不再细分国家地区。",
+    "代码不在本表里的会进「未分类」组提醒补录——和航司表是同一套约定。"
+  ],
+  "regions": [
+    {
+      "id": "asia",
+      "name": "亚洲"
+    },
+    {
+      "id": "europe",
+      "name": "欧洲"
+    },
+    {
+      "id": "north-america",
+      "name": "北美洲"
+    },
+    {
+      "id": "south-america",
+      "name": "南美洲"
+    },
+    {
+      "id": "oceania",
+      "name": "大洋洲"
+    },
+    {
+      "id": "africa",
+      "name": "非洲"
+    }
+  ],
+  "airports": {
+    "IAD": {
+      "name": "华盛顿杜勒斯国际机场",
+      "en": "Washington Dulles",
+      "city": "华盛顿",
+      "region": "north-america"
+    },
+    "NRT": {
+      "name": "成田国际机场",
+      "en": "Tokyo Narita",
+      "city": "东京",
+      "region": "asia"
+    },
+    "TPE": {
+      "name": "台湾桃园国际机场",
+      "en": "Taiwan Taoyuan",
+      "city": "台北",
+      "region": "asia"
+    },
+    "TSA": {
+      "name": "台北松山机场",
+      "en": "Taipei Songshan",
+      "city": "台北",
+      "region": "asia"
+    }
+  }
+}

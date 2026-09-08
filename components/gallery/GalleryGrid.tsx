@@ -376,7 +376,9 @@ function SidebarGroup({
                     : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100'
                 }`}
               >
-                <span className="truncate">{label}</span>
+                <span className="truncate" title={label}>
+                  {label}
+                </span>
                 <span className={active ? 'text-white/70' : 'text-gray-400 dark:text-gray-500'}>
                   {count}
                 </span>

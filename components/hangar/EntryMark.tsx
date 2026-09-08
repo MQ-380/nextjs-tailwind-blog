@@ -2,15 +2,17 @@ import Image from 'next/image';
 
 interface Props {
   name: string;
+  code: string;
   icon: string | null;
+  /** 机场用三字码当标记，比首字母有信息量 */
+  showCode?: boolean;
 }
 
 /**
- * 航司名左侧的小标记。
- * 有图标文件就用图标，没有就退回首字母方块——所以在还没配任何图标时
- * 版面也是完整的，不会留一排空位。
+ * 行首的小标记。优先级：图标文件 > 代码 > 首字母。
+ * 所以在还没配任何图标时版面也是完整的，不会留一排空位。
  */
-export default function AirlineMark({ name, icon }: Props) {
+export default function EntryMark({ name, code, icon, showCode }: Props) {
   if (icon) {
     // 垫一层浅色底片：favicon 来源五花八门，有的是深色 logo 配透明底
     // （深色主题下几乎看不见），有的自带白色方块。统一垫底后两种都能正常显示，
@@ -29,7 +31,7 @@ export default function AirlineMark({ name, icon }: Props) {
     );
   }
 
-  // 颜色按名字取模，同一家航司每次渲染都一样
+  // 颜色按名字取模，同一个条目每次渲染都一样
   const palette = [
     'bg-blue-100 text-blue-700 dark:bg-blue-400/10 dark:text-blue-300',
     'bg-green-100 text-green-700 dark:bg-green-400/10 dark:text-green-300',
@@ -41,6 +43,17 @@ export default function AirlineMark({ name, icon }: Props) {
   let hash = 0;
   for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) | 0;
   const tone = palette[Math.abs(hash) % palette.length];
+
+  if (showCode) {
+    return (
+      <span
+        className={`flex h-5 shrink-0 items-center justify-center rounded-[3px] px-1 font-mono text-[10px] font-medium ${tone}`}
+        aria-hidden="true"
+      >
+        {code}
+      </span>
+    );
+  }
 
   return (
     <span

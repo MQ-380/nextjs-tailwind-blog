@@ -3,6 +3,7 @@ import { imageSizeFromFile } from 'image-size/fromFile';
 import path from 'path';
 
 import airlinesConfig from '../data/airlines.json' with { type: 'json' };
+import airportsConfig from '../data/airports.json' with { type: 'json' };
 import { GALLERY_DIR, INDEXABLE_EXT } from './gallery-config.js';
 
 /**
@@ -13,6 +14,9 @@ import { GALLERY_DIR, INDEXABLE_EXT } from './gallery-config.js';
 const LOOKUPS = {
   airlines: Object.fromEntries(
     Object.entries(airlinesConfig.airlines).map(([code, info]) => [code, info.name])
+  ),
+  airports: Object.fromEntries(
+    Object.entries(airportsConfig.airports).map(([code, info]) => [code, info.name])
   ),
 };
 

@@ -63,31 +63,36 @@ export default function GalleryGrid({ photos, excludeFacets = [] }: Props) {
   // 「航司」「机型」「机场」几个带标题的区块。
   //
   // 计数是「在当前选择基础上再叠加这个标签后还剩几张」，已选中的显示当前结果数。
-  // 归零的标签直接不展示，否则会出现 United 已选中却还能点 Delta、
-  // 点完一张不剩且页面空白的情况。
+  // 选项始终全部保留：归零的只是变淡，不隐藏也不重排——否则一点选择，
+  // 旁边的选项就消失或跳位，很难再找回来。排序用的是不受当前选择影响的
+  // 基础数量，所以列表顺序自始至终是固定的。
   const labelGroups = useMemo(() => {
-    const groups = new Map<string, { name: string; label: string; count: number }[]>();
+    const groups = new Map<
+      string,
+      { name: string; label: string; count: number; base: number }[]
+    >();
 
     const names = new Set<string>();
     photosInTag.forEach((photo) => photo.tags.forEach((tag) => names.add(tag)));
 
     Array.from(names).forEach((name) => {
+      const separator = name.indexOf(':');
+      const group = separator > 0 ? name.slice(0, separator) : '标签';
+      if (excludeKey.split('|').includes(group)) return;
+      const label = separator > 0 ? name.slice(separator + 1) : name;
+
       const combined = activeLabels.includes(name) ? activeLabels : [...activeLabels, name];
       const count = photosInTag.filter((photo) =>
         combined.every((label) => photo.tags.includes(label))
       ).length;
-      if (count === 0 && !activeLabels.includes(name)) return;
+      const base = photosInTag.filter((photo) => photo.tags.includes(name)).length;
 
-      const separator = name.indexOf(':');
-      const group = separator > 0 ? name.slice(0, separator) : '标签';
-      const label = separator > 0 ? name.slice(separator + 1) : name;
-      if (excludeKey.split('|').includes(group)) return;
       if (!groups.has(group)) groups.set(group, []);
-      groups.get(group)!.push({ name, label, count });
+      groups.get(group)!.push({ name, label, count, base });
     });
 
     groups.forEach((items) =>
-      items.sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, 'zh'))
+      items.sort((a, b) => b.base - a.base || a.label.localeCompare(b.label, 'zh'))
     );
     return Array.from(groups, ([title, items]) => ({ title, items }));
   }, [photosInTag, activeLabels, excludeKey]);
@@ -195,6 +200,7 @@ export default function GalleryGrid({ photos, excludeFacets = [] }: Props) {
                 active={activeLabels.includes(name)}
                 onClick={() => toggleLabel(name)}
                 subtle
+                dim={!activeLabels.includes(name) && count === 0}
               >
                 {label} ({count})
               </Pill>
@@ -319,11 +325,13 @@ function PhotoCard({
 function Pill({
   active,
   subtle,
+  dim,
   onClick,
   children,
 }: {
   active: boolean;
   subtle?: boolean;
+  dim?: boolean;
   onClick: () => void;
   children: React.ReactNode;
 }) {
@@ -333,7 +341,7 @@ function Pill({
       onClick={onClick}
       className={`shrink-0 rounded-full px-3 py-1 font-medium transition-colors duration-200 ${
         subtle ? 'text-xs' : 'text-sm'
-      } ${
+      } ${dim ? 'opacity-40' : ''} ${
         active
           ? 'bg-primary-500 text-white'
           : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
@@ -355,6 +363,8 @@ function SidebarGroup({
   isActive: (name: string) => boolean;
   onSelect: (name: string) => void;
 }) {
+  // 计数为 0 表示叠加它会没有结果。变淡但保留可点，点了会看到空结果提示
+  const dim = (count: number, active: boolean) => !active && count === 0;
   return (
     <div>
       {title && (
@@ -374,9 +384,11 @@ function SidebarGroup({
                   active
                     ? 'bg-primary-500 text-white'
                     : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100'
-                }`}
+                } ${dim(count, active) ? 'opacity-40' : ''}`}
               >
-                <span className="truncate">{label}</span>
+                <span className="truncate" title={label}>
+                  {label}
+                </span>
                 <span className={active ? 'text-white/70' : 'text-gray-400 dark:text-gray-500'}>
                   {count}
                 </span>

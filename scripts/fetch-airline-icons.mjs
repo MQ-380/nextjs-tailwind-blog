@@ -28,11 +28,24 @@ function shotCodes() {
   return Array.from(new Set(galleryData.map((photo) => photo.codes?.['航司']).filter(Boolean)));
 }
 
-async function fetchIcon(domain) {
+async function fetchOne(domain) {
   const url = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128`;
   const res = await fetch(url, { redirect: 'follow' });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return Buffer.from(await res.arrayBuffer());
+}
+
+/**
+ * 裸域名 404 时补上 www. 再试一次。favicon 服务是按具体主机名缓存的，
+ * 不少航司（EVA Air、Air China、STARLUX 等）只有 www 那个能取到。
+ */
+async function fetchIcon(domain) {
+  try {
+    return await fetchOne(domain);
+  } catch (error) {
+    if (domain.startsWith('www.')) throw error;
+    return await fetchOne(`www.${domain}`);
+  }
 }
 
 async function main() {

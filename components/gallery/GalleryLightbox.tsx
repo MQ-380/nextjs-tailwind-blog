@@ -68,7 +68,7 @@ export default function GalleryLightbox({ photos, index, onClose, onNavigate }: 
             </div>
             <div className="mt-4 text-center text-white">
               {photo.caption && <p className="text-sm font-medium sm:text-base">{photo.caption}</p>}
-              <p className="mt-1 text-xs text-white/60">{photo.tag}</p>
+              <p className="mt-1 text-xs text-white/60">{[photo.tag, ...photo.tags].join(' · ')}</p>
             </div>
 
             {photos.length > 1 && (

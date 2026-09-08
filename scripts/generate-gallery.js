@@ -8,6 +8,24 @@ import { GALLERY_DIR, INDEXABLE_EXT } from './gallery-config.js';
 // 文件夹名即为该照片的 tag（飞机 / 城市名 / 任意分类），支持中文文件夹名。
 const OUTPUT_FILE = 'app/gallery-data.json';
 
+/**
+ * 从文件名解析附加标签（航空公司、机型等）：
+ *   ANA_787--haneda-sunset.jpg  →  ['ANA', '787']
+ *   IMG_0001.jpg                →  []
+ * 用 `--` 而不是单个下划线作分隔，是因为相机原始文件名里单下划线太常见
+ * （IMG_0001 会被误拆成 IMG 和 0001）。
+ */
+function parseFilenameTags(filename) {
+  const base = filename.slice(0, filename.length - path.extname(filename).length);
+  const separator = base.indexOf('--');
+  if (separator <= 0) return [];
+  return base
+    .slice(0, separator)
+    .split('_')
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+}
+
 async function readCaptions(tagDir) {
   try {
     const raw = await fs.readFile(path.join(tagDir, 'captions.json'), 'utf8');
@@ -51,6 +69,7 @@ async function generateGallery() {
         id: `${tag}/${file.name}`,
         src: `/${filePath.replace(/^public\//, '')}`,
         tag,
+        tags: parseFilenameTags(file.name),
         caption: captions[file.name] ?? null,
         width: dimensions.width,
         height: dimensions.height,
@@ -63,8 +82,8 @@ async function generateGallery() {
   photos.sort((a, b) => b.mtime - a.mtime);
   // mtime 只用于排序，不需要输出给前端
   const output = photos.map((photo) => {
-    const { id, src, tag, caption, width, height, filename } = photo;
-    return { id, src, tag, caption, width, height, filename };
+    const { id, src, tag, tags, caption, width, height, filename } = photo;
+    return { id, src, tag, tags, caption, width, height, filename };
   });
 
   await fs.writeFile(OUTPUT_FILE, JSON.stringify(output, null, 2) + '\n');

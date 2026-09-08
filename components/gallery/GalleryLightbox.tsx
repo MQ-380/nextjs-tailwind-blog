@@ -6,7 +6,7 @@ import Image from 'next/image';
 
 import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
 
-import type { GalleryPhoto } from './types';
+import { type GalleryPhoto, describePhoto } from './types';
 
 interface Props {
   photos: GalleryPhoto[];
@@ -58,7 +58,7 @@ export default function GalleryLightbox({ photos, index, onClose, onNavigate }: 
             <div className="relative flex max-h-[80vh] max-w-[90vw] items-center justify-center">
               <Image
                 src={photo.src}
-                alt={photo.caption ?? photo.tag}
+                alt={describePhoto(photo)}
                 width={photo.width}
                 height={photo.height}
                 className="max-h-[80vh] max-w-[90vw] rounded object-contain"
@@ -67,8 +67,7 @@ export default function GalleryLightbox({ photos, index, onClose, onNavigate }: 
               />
             </div>
             <div className="mt-4 text-center text-white">
-              {photo.caption && <p className="text-sm font-medium sm:text-base">{photo.caption}</p>}
-              <p className="mt-1 text-xs text-white/60">{[photo.tag, ...photo.tags].join(' · ')}</p>
+              <p className="text-sm font-medium sm:text-base">{describePhoto(photo)}</p>
             </div>
 
             {photos.length > 1 && (

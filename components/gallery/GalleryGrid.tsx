@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 
 import GalleryLightbox from './GalleryLightbox';
-import type { GalleryPhoto } from './types';
+import { type GalleryPhoto, describePhoto } from './types';
 
 interface Props {
   photos: GalleryPhoto[];
@@ -43,23 +43,36 @@ export default function GalleryGrid({ photos }: Props) {
     [photosInTag, activeLabels]
   );
 
-  // 标签计数是「在当前选择基础上再叠加这个标签后还剩几张」，
-  // 已选中的标签则显示当前结果数。归零的标签直接不展示，
-  // 否则会出现 ANA 已选中却还能点 JAL、点完一张不剩且页面空白的情况。
-  const labels = useMemo(() => {
+  // 标签形如 `航司:United`，按冒号前的字段名分组，侧边栏就能显示成
+  // 「航司」「机型」「机场」几个带标题的区块。
+  //
+  // 计数是「在当前选择基础上再叠加这个标签后还剩几张」，已选中的显示当前结果数。
+  // 归零的标签直接不展示，否则会出现 United 已选中却还能点 Delta、
+  // 点完一张不剩且页面空白的情况。
+  const labelGroups = useMemo(() => {
+    const groups = new Map<string, { name: string; label: string; count: number }[]>();
+
     const names = new Set<string>();
     photosInTag.forEach((photo) => photo.tags.forEach((tag) => names.add(tag)));
 
-    return Array.from(names)
-      .map((name) => {
-        const combined = activeLabels.includes(name) ? activeLabels : [...activeLabels, name];
-        const count = photosInTag.filter((photo) =>
-          combined.every((label) => photo.tags.includes(label))
-        ).length;
-        return { name, count };
-      })
-      .filter(({ name, count }) => count > 0 || activeLabels.includes(name))
-      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh'));
+    Array.from(names).forEach((name) => {
+      const combined = activeLabels.includes(name) ? activeLabels : [...activeLabels, name];
+      const count = photosInTag.filter((photo) =>
+        combined.every((label) => photo.tags.includes(label))
+      ).length;
+      if (count === 0 && !activeLabels.includes(name)) return;
+
+      const separator = name.indexOf(':');
+      const group = separator > 0 ? name.slice(0, separator) : '标签';
+      const label = separator > 0 ? name.slice(separator + 1) : name;
+      if (!groups.has(group)) groups.set(group, []);
+      groups.get(group)!.push({ name, label, count });
+    });
+
+    groups.forEach((items) =>
+      items.sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, 'zh'))
+    );
+    return Array.from(groups, ([title, items]) => ({ title, items }));
   }, [photosInTag, activeLabels]);
 
   const selectTag = useCallback((tag: string) => {
@@ -125,20 +138,24 @@ export default function GalleryGrid({ photos }: Props) {
             </Pill>
           ))}
         </div>
-        {labels.length > 0 && (
-          <div className="no-scrollbar -mx-4 mt-2 flex gap-2 overflow-x-auto px-4 pb-1">
-            {labels.map(({ name, count }) => (
+        {labelGroups.map(({ title, items }) => (
+          <div
+            key={title}
+            className="no-scrollbar -mx-4 mt-2 flex items-center gap-2 overflow-x-auto px-4 pb-1"
+          >
+            <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500">{title}</span>
+            {items.map(({ name, label, count }) => (
               <Pill
                 key={name}
                 active={activeLabels.includes(name)}
                 onClick={() => toggleLabel(name)}
                 subtle
               >
-                {name} ({count})
+                {label} ({count})
               </Pill>
             ))}
           </div>
-        )}
+        ))}
       </div>
       <div className="mb-6 sm:mb-0" />
 
@@ -151,14 +168,15 @@ export default function GalleryGrid({ photos }: Props) {
               isActive={(name) => activeTag === name}
               onSelect={selectTag}
             />
-            {labels.length > 0 && (
+            {labelGroups.map(({ title, items }) => (
               <SidebarGroup
-                title="标签"
-                items={labels.map(({ name, count }) => ({ name, label: name, count }))}
+                key={title}
+                title={title}
+                items={items}
                 isActive={(name) => activeLabels.includes(name)}
                 onSelect={toggleLabel}
               />
-            )}
+            ))}
           </nav>
         </aside>
 
@@ -237,7 +255,7 @@ function PhotoCard({
     >
       <Image
         src={photo.src}
-        alt={photo.caption ?? photo.tag}
+        alt={describePhoto(photo)}
         width={photo.width}
         height={photo.height}
         priority={priority}
@@ -245,12 +263,7 @@ function PhotoCard({
         sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 30vw, (min-width: 640px) 45vw, 50vw"
       />
       <div className="pointer-events-none absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/70 via-black/0 to-black/0 p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-        {photo.caption && (
-          <span className="text-left text-sm font-medium text-white">{photo.caption}</span>
-        )}
-        <span className="text-left text-xs text-white/70">
-          {[photo.tag, ...photo.tags].join(' · ')}
-        </span>
+        <span className="text-left text-sm font-medium text-white">{describePhoto(photo)}</span>
       </div>
     </button>
   );

@@ -12,14 +12,17 @@ interface Props {
  */
 export default function AirlineMark({ name, icon }: Props) {
   if (icon) {
+    // 垫一层浅色底片：favicon 来源五花八门，有的是深色 logo 配透明底
+    // （深色主题下几乎看不见），有的自带白色方块。统一垫底后两种都能正常显示，
+    // 也让这一列看起来是一致的。
     return (
-      <span className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-[3px]">
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-[3px] bg-white p-px ring-1 ring-gray-200 dark:ring-gray-700">
         <Image
           src={icon}
           alt=""
           width={20}
           height={20}
-          className="h-5 w-5 object-contain"
+          className="h-full w-full object-contain"
           unoptimized
         />
       </span>

@@ -7,9 +7,78 @@
     "联盟成员会变动（SAS 已于 2024 年由星空转投天合，ITA 被汉莎收购后转投星空），",
     "名单需要人工维护。拍到的航司若不在任何名单里，目录页会单独列为「未分类」提醒补录。",
     "unaffiliated 是已确认不属于任何联盟的航司。它和「未分类」的区别在于前者是你确认过的，",
-    "后者是映射表还没覆盖到的——没有这个区分，新航司会被静默归进无联盟组，自动分类就失灵了。"
+    "后者是映射表还没覆盖到的——没有这个区分，新航司会被静默归进无联盟组，自动分类就失灵了。",
+    "domains 是抓取网站 favicon 用的官网域名，见 scripts/fetch-airline-icons.mjs。"
   ],
-  "unaffiliated": ["Aer Lingus", "Allegiant"],
+  "domains": {
+    "Aegean Airlines": "aegeanair.com",
+    "Air Canada": "aircanada.com",
+    "Air China": "airchina.com",
+    "Air India": "airindia.com",
+    "Air New Zealand": "airnewzealand.com",
+    "ANA": "ana.co.jp",
+    "Asiana Airlines": "flyasiana.com",
+    "Austrian Airlines": "austrian.com",
+    "Avianca": "avianca.com",
+    "Brussels Airlines": "brusselsairlines.com",
+    "Copa Airlines": "copaair.com",
+    "Croatia Airlines": "croatiaairlines.com",
+    "EGYPTAIR": "egyptair.com",
+    "Ethiopian Airlines": "ethiopianairlines.com",
+    "EVA Air": "evaair.com",
+    "ITA Airways": "ita-airways.com",
+    "LOT Polish Airlines": "lot.com",
+    "Lufthansa": "lufthansa.com",
+    "Shenzhen Airlines": "shenzhenair.com",
+    "Singapore Airlines": "singaporeair.com",
+    "South African Airways": "flysaa.com",
+    "SWISS": "swiss.com",
+    "TAP Air Portugal": "flytap.com",
+    "THAI Airways": "thaiairways.com",
+    "Turkish Airlines": "turkishairlines.com",
+    "United": "united.com",
+    "Aeroflot": "aeroflot.ru",
+    "Aerolíneas Argentinas": "aerolineas.com.ar",
+    "Aeroméxico": "aeromexico.com",
+    "Air Europa": "aireuropa.com",
+    "Air France": "airfrance.com",
+    "China Airlines": "china-airlines.com",
+    "China Eastern": "ceair.com",
+    "Delta": "delta.com",
+    "Garuda Indonesia": "garuda-indonesia.com",
+    "Kenya Airways": "kenya-airways.com",
+    "KLM": "klm.com",
+    "Korean Air": "koreanair.com",
+    "Middle East Airlines": "mea.com.lb",
+    "SAS": "flysas.com",
+    "Saudia": "saudia.com",
+    "SCAT Airlines": "scat.kz",
+    "TAROM": "tarom.ro",
+    "Vietnam Airlines": "vietnamairlines.com",
+    "Virgin Atlantic": "virginatlantic.com",
+    "XiamenAir": "xiamenair.com",
+    "Alaska Airlines": "alaskaair.com",
+    "American Airlines": "aa.com",
+    "British Airways": "britishairways.com",
+    "Cathay Pacific": "cathaypacific.com",
+    "Fiji Airways": "fijiairways.com",
+    "Finnair": "finnair.com",
+    "Iberia": "iberia.com",
+    "Japan Airlines": "jal.co.jp",
+    "Malaysia Airlines": "malaysiaairlines.com",
+    "Oman Air": "omanair.com",
+    "Qantas": "qantas.com",
+    "Qatar Airways": "qatarairways.com",
+    "Royal Air Maroc": "royalairmaroc.com",
+    "Royal Jordanian": "rj.com",
+    "SriLankan Airlines": "srilankan.com",
+    "Aer Lingus": "aerlingus.com",
+    "Allegiant": "allegiantair.com"
+  },
+  "unaffiliated": [
+    "Aer Lingus",
+    "Allegiant"
+  ],
   "alliances": [
     {
       "id": "star",
@@ -25,13 +94,23 @@
         "Asiana Airlines",
         "Austrian Airlines",
         "Avianca",
-        { "name": "Brussels Airlines", "aliases": ["Brussels"] },
+        {
+          "name": "Brussels Airlines",
+          "aliases": [
+            "Brussels"
+          ]
+        },
         "Copa Airlines",
         "Croatia Airlines",
         "EGYPTAIR",
         "Ethiopian Airlines",
         "EVA Air",
-        { "name": "ITA Airways", "aliases": ["ITA"] },
+        {
+          "name": "ITA Airways",
+          "aliases": [
+            "ITA"
+          ]
+        },
         "LOT Polish Airlines",
         "Lufthansa",
         "Shenzhen Airlines",
@@ -87,7 +166,12 @@
         "Malaysia Airlines",
         "Oman Air",
         "Qantas",
-        { "name": "Qatar Airways", "aliases": ["Qatar"] },
+        {
+          "name": "Qatar Airways",
+          "aliases": [
+            "Qatar"
+          ]
+        },
         "Royal Air Maroc",
         "Royal Jordanian",
         "SriLankan Airlines"

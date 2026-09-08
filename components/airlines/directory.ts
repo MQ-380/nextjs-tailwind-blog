@@ -75,9 +75,15 @@ export function buildDirectory(
   photos: GalleryPhoto[],
   icons: Record<string, string> = {}
 ): Directory {
-  const iconFor = (name: string) => {
-    const file = icons[airlineSlug(name)];
-    return file ? `/static/images/airlines/${file}` : null;
+  // 照片里写 `Qatar`，名单里是 `Qatar Airways`，图标文件按名单命名。
+  // 两个名字都试一遍，别名写法才不会漏掉图标。
+  const iconFor = (...names: (string | undefined)[]) => {
+    for (const name of names) {
+      if (!name) continue;
+      const file = icons[airlineSlug(name)];
+      if (file) return `/static/images/airlines/${file}`;
+    }
+    return null;
   };
 
   // 先按航司归拢照片
@@ -93,7 +99,7 @@ export function buildDirectory(
     byAirline.get(key)!.photos.push(photo);
   });
 
-  const toAirline = (key: string): DirectoryAirline => {
+  const toAirline = (key: string, canonicalName?: string): DirectoryAirline => {
     const entry = byAirline.get(key)!;
     const aircraft = Array.from(
       new Set(entry.photos.map((p) => p.fields[AIRCRAFT_FIELD]).filter(Boolean))
@@ -103,7 +109,7 @@ export function buildDirectory(
       photoCount: entry.photos.length,
       aircraft,
       href: galleryHref(AIRLINE_FIELD, entry.name),
-      icon: iconFor(entry.name),
+      icon: iconFor(canonicalName, entry.name),
     };
   };
 
@@ -118,7 +124,7 @@ export function buildDirectory(
       const hit = memberKeys(member).find((key) => byAirline.has(key));
       if (hit) {
         claimed.add(hit);
-        shot.push(toAirline(hit));
+        shot.push(toAirline(hit, memberName(member)));
       } else {
         missing.push(memberName(member));
       }
@@ -149,11 +155,11 @@ export function buildDirectory(
     alliances,
     unaffiliated: rest
       .filter((key) => confirmedUnaffiliated.has(key))
-      .map(toAirline)
+      .map((key) => toAirline(key))
       .sort(byCount),
     unclassified: rest
       .filter((key) => !confirmedUnaffiliated.has(key))
-      .map(toAirline)
+      .map((key) => toAirline(key))
       .sort(byCount),
     totals: {
       airlines: byAirline.size,

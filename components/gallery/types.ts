@@ -7,6 +7,8 @@ export interface GalleryPhoto {
   tags: string[];
   /** 文件名解析出的全部字段，含不做筛选项的（如注册号），用于展示 */
   fields: Record<string, string>;
+  /** 查表前的原始值，只有声明了 lookup 的字段才有（如 航司: "UA"） */
+  codes: Record<string, string>;
   caption: string | null;
   width: number;
   height: number;

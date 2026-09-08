@@ -2,28 +2,21 @@ import airlinesConfig from '@/data/airlines.json';
 
 import type { GalleryPhoto } from '../gallery/types';
 
-/** 航司字段在文件名 schema 里的名字，也是 tag 的前缀（`航司:United`） */
+/** 航司字段在文件名 schema 里的名字，也是 tag 的前缀（`航司:United Airlines`） */
 export const AIRLINE_FIELD = '航司';
 /** 机型字段，用于在目录页列出该航司拍到过的机型 */
 export const AIRCRAFT_FIELD = '机型';
 
 export interface DirectoryAirline {
-  /** 展示名。拍到过的用照片里的写法，没拍到的用名单里的写法 */
+  /** IATA 二字码，同时是详情页地址和图标文件名 */
+  code: string;
+  /** 展示用全称，来自 data/airlines.json */
   name: string;
   photoCount: number;
   aircraft: string[];
-  /** 该航司的详情页地址，没拍到的为 null */
-  href: string | null;
-  /** 图标路径，public/static/images/airlines/<slug>.* 存在时才有 */
+  href: string;
+  /** 图标路径，public/static/images/airlines/<code>.* 存在时才有 */
   icon: string | null;
-}
-
-/** 航司名 → 图标文件名。`Aer Lingus` → `aer-lingus` */
-export function airlineSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
 }
 
 export interface DirectoryAlliance {
@@ -31,7 +24,7 @@ export interface DirectoryAlliance {
   name: string;
   en: string;
   shot: DirectoryAirline[];
-  /** 名单里但还没拍到的航司名 */
+  /** 名单里但还没拍到的航司全称 */
   missing: string[];
   memberCount: number;
   photoCount: number;
@@ -39,32 +32,23 @@ export interface DirectoryAlliance {
 
 export interface Directory {
   alliances: DirectoryAlliance[];
-  /** 不属于任何联盟、且已拍到的航司。没有全集，所以不做进度 */
+  /** 已确认不属于任何联盟、且已拍到的。没有全集，所以不做进度 */
   unaffiliated: DirectoryAirline[];
-  /** 拍到了但不在任何名单里的航司——映射表漏了，需要补录 */
+  /** 代码不在 data/airlines.json 里的——映射表漏了，需要补录 */
   unclassified: DirectoryAirline[];
   totals: { airlines: number; photos: number; airports: number };
 }
 
-type RawMember = string | { name: string; aliases?: string[] };
+type AirlineInfo = { name: string; alliance: string | null; domain: string };
+const AIRLINES = airlinesConfig.airlines as Record<string, AirlineInfo>;
 
-/** 匹配时忽略大小写、空格和连字符，让 `Aer Lingus` 和 `aerlingus` 等价 */
-function normalize(name: string): string {
-  return name.toLowerCase().replace(/[\s\-_.]/g, '');
+/** 详情页地址与图标文件名都用小写代码 */
+export function airlineSlug(code: string): string {
+  return code.toLowerCase();
 }
 
-function memberName(member: RawMember): string {
-  return typeof member === 'string' ? member : member.name;
-}
-
-function memberKeys(member: RawMember): string[] {
-  const names = typeof member === 'string' ? [member] : [member.name, ...(member.aliases ?? [])];
-  return names.map(normalize);
-}
-
-/** 航司详情页的地址。/gallery?tag=… 那种筛选链接仍然可用，只是不再从目录页进入 */
-export function airlineHref(name: string): string {
-  return `/airlines/${airlineSlug(name)}`;
+export function airlineHref(code: string): string {
+  return `/airlines/${airlineSlug(code)}`;
 }
 
 /**
@@ -75,62 +59,49 @@ export function buildDirectory(
   photos: GalleryPhoto[],
   icons: Record<string, string> = {}
 ): Directory {
-  // 照片里写 `Qatar`，名单里是 `Qatar Airways`，图标文件按名单命名。
-  // 两个名字都试一遍，别名写法才不会漏掉图标。
-  const iconFor = (...names: (string | undefined)[]) => {
-    for (const name of names) {
-      if (!name) continue;
-      const file = icons[airlineSlug(name)];
-      if (file) return `/static/images/airlines/${file}`;
-    }
-    return null;
-  };
-
-  // 先按航司归拢照片
-  const byAirline = new Map<string, { name: string; photos: GalleryPhoto[] }>();
+  // 按 IATA 代码归拢照片
+  const byCode = new Map<string, GalleryPhoto[]>();
   const airports = new Set<string>();
 
   photos.forEach((photo) => {
-    const airline = photo.fields[AIRLINE_FIELD];
     if (photo.fields['机场']) airports.add(photo.fields['机场']);
-    if (!airline) return;
-    const key = normalize(airline);
-    if (!byAirline.has(key)) byAirline.set(key, { name: airline, photos: [] });
-    byAirline.get(key)!.photos.push(photo);
+    const code = photo.codes?.[AIRLINE_FIELD];
+    if (!code) return;
+    if (!byCode.has(code)) byCode.set(code, []);
+    byCode.get(code)!.push(photo);
   });
 
-  const toAirline = (key: string, canonicalName?: string): DirectoryAirline => {
-    const entry = byAirline.get(key)!;
+  const toAirline = (code: string): DirectoryAirline => {
+    const matched = byCode.get(code)!;
     const aircraft = Array.from(
-      new Set(entry.photos.map((p) => p.fields[AIRCRAFT_FIELD]).filter(Boolean))
+      new Set(matched.map((p) => p.fields[AIRCRAFT_FIELD]).filter(Boolean))
     ).sort((a, b) => a.localeCompare(b));
+    const iconFile = icons[airlineSlug(code)];
     return {
-      name: entry.name,
-      photoCount: entry.photos.length,
+      code,
+      // 查不到代码时退回照片里的原值，这类航司会进「未分类」组
+      name: AIRLINES[code]?.name ?? matched[0].fields[AIRLINE_FIELD] ?? code,
+      photoCount: matched.length,
       aircraft,
-      href: airlineHref(entry.name),
-      icon: iconFor(canonicalName, entry.name),
+      href: airlineHref(code),
+      icon: iconFile ? `/static/images/airlines/${iconFile}` : null,
     };
   };
 
-  const claimed = new Set<string>();
+  const byCount = (a: DirectoryAirline, b: DirectoryAirline) =>
+    b.photoCount - a.photoCount || a.name.localeCompare(b.name);
 
   const alliances: DirectoryAlliance[] = airlinesConfig.alliances.map((alliance) => {
-    const members = alliance.members as RawMember[];
-    const shot: DirectoryAirline[] = [];
-    const missing: string[] = [];
-
-    members.forEach((member) => {
-      const hit = memberKeys(member).find((key) => byAirline.has(key));
-      if (hit) {
-        claimed.add(hit);
-        shot.push(toAirline(hit, memberName(member)));
-      } else {
-        missing.push(memberName(member));
-      }
-    });
-
-    shot.sort((a, b) => b.photoCount - a.photoCount || a.name.localeCompare(b.name));
+    // 成员名单由 airlines 表按 alliance 分组得出，不再单独维护一份
+    const members = Object.entries(AIRLINES).filter(([, info]) => info.alliance === alliance.id);
+    const shot = members
+      .filter(([code]) => byCode.has(code))
+      .map(([code]) => toAirline(code))
+      .sort(byCount);
+    const missing = members
+      .filter(([code]) => !byCode.has(code))
+      .map(([, info]) => info.name)
+      .sort((a, b) => a.localeCompare(b));
 
     return {
       id: alliance.id,
@@ -143,27 +114,23 @@ export function buildDirectory(
     };
   });
 
-  // 已确认不属于任何联盟的，和映射表还没覆盖到的，必须分开：
-  // 混在一起的话，新拍到的航司会被静默归进无联盟组，自动分类就失灵了。
-  const confirmedUnaffiliated = new Set((airlinesConfig.unaffiliated as string[]).map(normalize));
-  const byCount = (a: DirectoryAirline, b: DirectoryAirline) =>
-    b.photoCount - a.photoCount || a.name.localeCompare(b.name);
-
-  const rest = Array.from(byAirline.keys()).filter((key) => !claimed.has(key));
+  const codes = Array.from(byCode.keys());
 
   return {
     alliances,
-    unaffiliated: rest
-      .filter((key) => confirmedUnaffiliated.has(key))
-      .map((key) => toAirline(key))
+    // 已确认不属于任何联盟（alliance: null），和代码根本不在表里的，必须分开：
+    // 混在一起的话，新航司会被静默归进无联盟组，自动分类就失灵了。
+    unaffiliated: codes
+      .filter((code) => AIRLINES[code]?.alliance === null)
+      .map(toAirline)
       .sort(byCount),
-    unclassified: rest
-      .filter((key) => !confirmedUnaffiliated.has(key))
-      .map((key) => toAirline(key))
+    unclassified: codes
+      .filter((code) => !AIRLINES[code])
+      .map(toAirline)
       .sort(byCount),
     totals: {
-      airlines: byAirline.size,
-      photos: photos.filter((p) => p.fields[AIRLINE_FIELD]).length,
+      airlines: byCode.size,
+      photos: Array.from(byCode.values()).reduce((sum, list) => sum + list.length, 0),
       airports: airports.size,
     },
   };

@@ -2,7 +2,19 @@ import fs from 'fs/promises';
 import { imageSizeFromFile } from 'image-size/fromFile';
 import path from 'path';
 
+import airlinesConfig from '../data/airlines.json' with { type: 'json' };
 import { GALLERY_DIR, INDEXABLE_EXT } from './gallery-config.js';
+
+/**
+ * schema 的 lookup 指向的查找表。文件名里写短代码，这里换成展示用的全称：
+ * `UA_B757-200_IAD_N41135.jpg` 的航司段 UA 会变成 United Airlines。
+ * 代码改名时只改 data/airlines.json，不用重命名照片。
+ */
+const LOOKUPS = {
+  airlines: Object.fromEntries(
+    Object.entries(airlinesConfig.airlines).map(([code, info]) => [code, info.name])
+  ),
+};
 
 // 每张照片放在 public/static/images/gallery/<tag>/ 下，
 // 文件夹名即为该照片的 tag（飞机 / 城市名 / 任意分类），支持中文文件夹名。
@@ -22,7 +34,7 @@ async function readSchema(tagDir) {
     const fields = Array.isArray(parsed) ? parsed : parsed.fields;
     if (!Array.isArray(fields) || fields.length === 0) return null;
     const facets = Array.isArray(parsed.facets) ? parsed.facets : fields;
-    return { fields, facets: new Set(facets) };
+    return { fields, facets: new Set(facets), lookup: parsed.lookup ?? {} };
   } catch {
     return null;
   }
@@ -33,22 +45,41 @@ async function readSchema(tagDir) {
  * 所以 `Aer Lingus_A321-200LR_IAD_EI-LRD.jpg` 能正确拆成四段。
  */
 function parseFilename(filename, schema) {
-  if (!schema) return { fields: {}, tags: [] };
+  if (!schema) return { fields: {}, codes: {}, tags: [] };
 
   const base = filename.slice(0, filename.length - path.extname(filename).length);
   const segments = base.split('_').map((s) => s.trim());
 
   const fields = {};
+  const codes = {};
   const tags = [];
+  const unresolved = [];
+
   schema.fields.forEach((name, i) => {
-    const value = segments[i];
-    if (!value) return;
+    const raw = segments[i];
+    if (!raw) return;
+
+    // 声明了 lookup 的字段：文件名里是代码，查表换成全称。
+    // 查不到就原样保留代码，并记下来交由调用方提示补录。
+    const table = schema.lookup[name] ? LOOKUPS[schema.lookup[name]] : null;
+    if (table) {
+      codes[name] = raw;
+      if (!table[raw]) unresolved.push(`${name}=${raw}`);
+    }
+    const value = table?.[raw] ?? raw;
+
     fields[name] = value;
     // 只有 facets 里的字段进 tags，注册号这种每张都不同的放进来只会让筛选栏爆炸
     if (schema.facets.has(name)) tags.push(`${name}:${value}`);
   });
 
-  return { fields, tags, extraSegments: segments.length - schema.fields.length };
+  return {
+    fields,
+    codes,
+    tags,
+    unresolved,
+    extraSegments: segments.length - schema.fields.length,
+  };
 }
 
 async function readCaptions(tagDir) {
@@ -90,7 +121,13 @@ async function generateGallery() {
         imageSizeFromFile(filePath),
       ]);
 
-      const { fields, tags, extraSegments } = parseFilename(file.name, schema);
+      const { fields, codes, tags, unresolved, extraSegments } = parseFilename(file.name, schema);
+      if (unresolved.length > 0) {
+        console.warn(
+          `[generate-gallery] ${tag}/${file.name} 查不到 ${unresolved.join('、')}，` +
+            `已按原值处理，请在 data/airlines.json 补录`
+        );
+      }
       if (extraSegments > 0) {
         console.warn(
           `[generate-gallery] ${tag}/${file.name} 比 schema 多了 ${extraSegments} 段，多出的部分已忽略`
@@ -103,6 +140,7 @@ async function generateGallery() {
         tag,
         tags,
         fields,
+        codes,
         caption: captions[file.name] ?? null,
         width: dimensions.width,
         height: dimensions.height,
@@ -115,8 +153,8 @@ async function generateGallery() {
   photos.sort((a, b) => b.mtime - a.mtime);
   // mtime 只用于排序，不需要输出给前端
   const output = photos.map((photo) => {
-    const { id, src, tag, tags, fields, caption, width, height, filename } = photo;
-    return { id, src, tag, tags, fields, caption, width, height, filename };
+    const { id, src, tag, tags, fields, codes, caption, width, height, filename } = photo;
+    return { id, src, tag, tags, fields, codes, caption, width, height, filename };
   });
 
   await fs.writeFile(OUTPUT_FILE, JSON.stringify(output, null, 2) + '\n');

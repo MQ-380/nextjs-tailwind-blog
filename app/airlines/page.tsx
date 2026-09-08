@@ -4,7 +4,7 @@ import path from 'path';
 import SectionContainer from '@/components/SectionContainer';
 import AirlineRow from '@/components/airlines/AirlineRow';
 import MissingAirlines from '@/components/airlines/MissingAirlines';
-import { airlineSlug, buildDirectory } from '@/components/airlines/directory';
+import { buildDirectory } from '@/components/airlines/directory';
 import type { GalleryPhoto } from '@/components/gallery/types';
 import PageTitle from '@/components/posts/PageTitle';
 
@@ -26,7 +26,7 @@ function readIcons(): Record<string, string> {
       fs
         .readdirSync(ICON_DIR)
         .filter((file) => /\.(png|jpe?g|svg|webp)$/i.test(file))
-        .map((file) => [airlineSlug(path.basename(file, path.extname(file))), file])
+        .map((file) => [path.basename(file, path.extname(file)).toLowerCase(), file])
     );
   } catch {
     return {};

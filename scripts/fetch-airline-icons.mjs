@@ -2,8 +2,8 @@ import fs from 'fs/promises';
 import path from 'path';
 import sharp from 'sharp';
 
-import airlinesConfig from '../data/airlines.json' with { type: 'json' };
 import galleryData from '../app/gallery-data.json' with { type: 'json' };
+import airlinesConfig from '../data/airlines.json' with { type: 'json' };
 
 // 抓取航司官网 favicon 作为目录页的图标。
 //
@@ -18,43 +18,14 @@ const OUTPUT_SIZE = 64;
 /** 源图小于这个尺寸的，放大到 64 会糊，值得提醒 */
 const LOW_RES_BELOW = 32;
 
-function slug(name) {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
+/** 表里的全部 IATA 代码 */
+function allCodes() {
+  return Object.keys(airlinesConfig.airlines);
 }
 
-/** 名单里出现过的全部航司名（含别名，用于和照片里的写法对上） */
-function rosterNames() {
-  const names = [];
-  airlinesConfig.alliances.forEach((alliance) =>
-    alliance.members.forEach((member) =>
-      names.push(typeof member === 'string' ? member : member.name)
-    )
-  );
-  return names.concat(airlinesConfig.unaffiliated);
-}
-
-/** 照片里出现过的航司，映射回名单里的正式名 */
-function shotNames() {
-  const norm = (s) => s.toLowerCase().replace(/[\s\-_.]/g, '');
-  const shot = new Set(
-    galleryData.map((photo) => photo.fields?.['航司']).filter(Boolean).map(norm)
-  );
-
-  const matched = [];
-  airlinesConfig.alliances.forEach((alliance) =>
-    alliance.members.forEach((member) => {
-      const name = typeof member === 'string' ? member : member.name;
-      const aliases = typeof member === 'string' ? [] : (member.aliases ?? []);
-      if ([name, ...aliases].some((n) => shot.has(norm(n)))) matched.push(name);
-    })
-  );
-  airlinesConfig.unaffiliated.forEach((name) => {
-    if (shot.has(norm(name))) matched.push(name);
-  });
-  return matched;
+/** 照片里出现过的 IATA 代码 */
+function shotCodes() {
+  return Array.from(new Set(galleryData.map((photo) => photo.codes?.['航司']).filter(Boolean)));
 }
 
 async function fetchIcon(domain) {
@@ -66,7 +37,7 @@ async function fetchIcon(domain) {
 
 async function main() {
   const all = process.argv.includes('--all');
-  const targets = all ? rosterNames() : shotNames();
+  const targets = all ? allCodes() : shotCodes();
 
   await fs.mkdir(ICON_DIR, { recursive: true });
   const existing = new Set(
@@ -77,18 +48,20 @@ async function main() {
   const lowRes = [];
   let skipped = 0;
 
-  for (const name of targets) {
-    const key = slug(name);
+  for (const code of targets) {
+    const key = code.toLowerCase();
     if (existing.has(key)) {
       skipped += 1;
       continue;
     }
 
-    const domain = airlinesConfig.domains[name];
-    if (!domain) {
-      console.warn(`  ${name.padEnd(24)} 跳过：data/airlines.json 的 domains 里没有域名`);
+    const info = airlinesConfig.airlines[code];
+    const name = info?.name ?? code;
+    if (!info?.domain) {
+      console.warn(`  ${code.padEnd(6)}${name.padEnd(24)} 跳过：data/airlines.json 里没有域名`);
       continue;
     }
+    const domain = info.domain;
 
     try {
       const buffer = await fetchIcon(domain);
@@ -105,15 +78,15 @@ async function main() {
       const source = `${meta.width}x${meta.height}`;
       saved.push({ name, domain, source });
       if (Math.min(meta.width, meta.height) < LOW_RES_BELOW) lowRes.push({ name, source });
-      console.log(`  ${name.padEnd(24)} ${domain.padEnd(24)} 源图 ${source}`);
+      console.log(`  ${code.padEnd(6)}${name.padEnd(24)} ${domain.padEnd(24)} 源图 ${source}`);
     } catch (error) {
-      console.warn(`  ${name.padEnd(24)} 抓取失败：${error.message}`);
+      console.warn(`  ${code.padEnd(6)}${name.padEnd(24)} 抓取失败：${error.message}`);
     }
   }
 
   console.log(
     `\n[fetch-airline-icons] 新增 ${saved.length} 个，跳过 ${skipped} 个已存在的` +
-      (all ? '' : `（只处理已拍到的航司，加 --all 抓全部 ${rosterNames().length} 家）`)
+      (all ? '' : `（只处理已拍到的航司，加 --all 抓全部 ${allCodes().length} 家）`)
   );
 
   if (lowRes.length > 0) {

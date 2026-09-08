@@ -15,8 +15,8 @@ const photos = galleryData as GalleryPhoto[];
 
 function photosOf(slug: string) {
   return photos.filter((photo) => {
-    const airline = photo.fields[AIRLINE_FIELD];
-    return airline ? airlineSlug(airline) === slug : false;
+    const code = photo.codes?.[AIRLINE_FIELD];
+    return code ? airlineSlug(code) === slug : false;
   });
 }
 
@@ -24,7 +24,7 @@ function photosOf(slug: string) {
 export function generateStaticParams() {
   const slugs = new Set(
     photos
-      .map((photo) => photo.fields[AIRLINE_FIELD])
+      .map((photo) => photo.codes?.[AIRLINE_FIELD])
       .filter(Boolean)
       .map(airlineSlug)
   );

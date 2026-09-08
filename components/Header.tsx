@@ -14,9 +14,11 @@ export default function Header() {
   const headerClass =
     'flex item-center w-full bg-white dark:bg-gray-950 justify-between py-10 sticky top-0 z-50';
   const { headerTitle } = siteMetadata;
-  // 没有照片时不展示相册入口。在服务端组件里过滤，避免整份照片清单被打进客户端包
+  // 没有照片时不展示相册和航司目录入口。在服务端组件里过滤，
+  // 避免整份照片清单被打进客户端包
+  const photoOnlyLinks = ['/gallery', '/airlines'];
   const navLinks = headerNavLinks.filter(
-    (link) => link.href !== '/gallery' || galleryData.length > 0
+    (link) => !photoOnlyLinks.includes(link.href) || galleryData.length > 0
   );
 
   return (

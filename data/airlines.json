@@ -1,0 +1,97 @@
+{
+  "_说明": [
+    "航司 → 联盟的映射表，以及三大联盟的完整成员名单。",
+    "members 里的名字用于两件事：匹配照片文件名里的航司段，以及在目录页显示。",
+    "文件名里的写法和官方全称不一致时（如 Qatar / Qatar Airways），用 aliases 补上。",
+    "匹配时忽略大小写、空格和连字符，所以 'Aer Lingus' 和 'aerlingus' 等价。",
+    "联盟成员会变动（SAS 已于 2024 年由星空转投天合，ITA 被汉莎收购后转投星空），",
+    "名单需要人工维护。拍到的航司若不在任何名单里，目录页会单独列为「未分类」提醒补录。",
+    "unaffiliated 是已确认不属于任何联盟的航司。它和「未分类」的区别在于前者是你确认过的，",
+    "后者是映射表还没覆盖到的——没有这个区分，新航司会被静默归进无联盟组，自动分类就失灵了。"
+  ],
+  "unaffiliated": ["Aer Lingus", "Allegiant"],
+  "alliances": [
+    {
+      "id": "star",
+      "name": "星空联盟",
+      "en": "Star Alliance",
+      "members": [
+        "Aegean Airlines",
+        "Air Canada",
+        "Air China",
+        "Air India",
+        "Air New Zealand",
+        "ANA",
+        "Asiana Airlines",
+        "Austrian Airlines",
+        "Avianca",
+        { "name": "Brussels Airlines", "aliases": ["Brussels"] },
+        "Copa Airlines",
+        "Croatia Airlines",
+        "EGYPTAIR",
+        "Ethiopian Airlines",
+        "EVA Air",
+        { "name": "ITA Airways", "aliases": ["ITA"] },
+        "LOT Polish Airlines",
+        "Lufthansa",
+        "Shenzhen Airlines",
+        "Singapore Airlines",
+        "South African Airways",
+        "SWISS",
+        "TAP Air Portugal",
+        "THAI Airways",
+        "Turkish Airlines",
+        "United"
+      ]
+    },
+    {
+      "id": "skyteam",
+      "name": "天合联盟",
+      "en": "SkyTeam",
+      "members": [
+        "Aeroflot",
+        "Aerolíneas Argentinas",
+        "Aeroméxico",
+        "Air Europa",
+        "Air France",
+        "China Airlines",
+        "China Eastern",
+        "Delta",
+        "Garuda Indonesia",
+        "Kenya Airways",
+        "KLM",
+        "Korean Air",
+        "Middle East Airlines",
+        "SAS",
+        "Saudia",
+        "SCAT Airlines",
+        "TAROM",
+        "Vietnam Airlines",
+        "Virgin Atlantic",
+        "XiamenAir"
+      ]
+    },
+    {
+      "id": "oneworld",
+      "name": "寰宇一家",
+      "en": "oneworld",
+      "members": [
+        "Alaska Airlines",
+        "American Airlines",
+        "British Airways",
+        "Cathay Pacific",
+        "Fiji Airways",
+        "Finnair",
+        "Iberia",
+        "Japan Airlines",
+        "Malaysia Airlines",
+        "Oman Air",
+        "Qantas",
+        { "name": "Qatar Airways", "aliases": ["Qatar"] },
+        "Royal Air Maroc",
+        "Royal Jordanian",
+        "SriLankan Airlines"
+      ]
+    }
+  ]
+}

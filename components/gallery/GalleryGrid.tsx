@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import Image from 'next/image';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import GalleryLightbox from './GalleryLightbox';
 import { type GalleryPhoto, describePhoto } from './types';
@@ -18,8 +19,14 @@ const BATCH_SIZE = 24;
 const PRELOAD_MARGIN = '600px';
 
 export default function GalleryGrid({ photos }: Props) {
-  const [activeTag, setActiveTag] = useState<string>(ALL);
-  const [activeLabels, setActiveLabels] = useState<string[]>([]);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // 筛选状态从 URL 还原：航司目录页靠 ?tag=航司:United 链进来，
+  // 同时也让任何一组筛选结果变成可分享的链接。
+  const [activeTag, setActiveTag] = useState<string>(() => searchParams.get('cat') ?? ALL);
+  const [activeLabels, setActiveLabels] = useState<string[]>(() => searchParams.getAll('tag'));
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
   const columnCount = useColumnCount();
@@ -75,18 +82,42 @@ export default function GalleryGrid({ photos }: Props) {
     return Array.from(groups, ([title, items]) => ({ title, items }));
   }, [photosInTag, activeLabels]);
 
-  const selectTag = useCallback((tag: string) => {
-    setActiveTag(tag);
-    setActiveLabels([]);
-    setVisibleCount(BATCH_SIZE);
-  }, []);
+  // 把筛选状态同步回 URL。replace 而非 push，免得筛几下就塞满浏览器历史；
+  // scroll: false 保持当前滚动位置。
+  const syncUrl = useCallback(
+    (tag: string, labels: string[]) => {
+      const params = new URLSearchParams();
+      if (tag !== ALL) params.set('cat', tag);
+      labels.forEach((label) => params.append('tag', label));
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    },
+    [router, pathname]
+  );
 
-  const toggleLabel = useCallback((label: string) => {
-    setActiveLabels((current) =>
-      current.includes(label) ? current.filter((l) => l !== label) : [...current, label]
-    );
-    setVisibleCount(BATCH_SIZE);
-  }, []);
+  const selectTag = useCallback(
+    (tag: string) => {
+      setActiveTag(tag);
+      setActiveLabels([]);
+      setVisibleCount(BATCH_SIZE);
+      syncUrl(tag, []);
+    },
+    [syncUrl]
+  );
+
+  const toggleLabel = useCallback(
+    (label: string) => {
+      setActiveLabels((current) => {
+        const next = current.includes(label)
+          ? current.filter((l) => l !== label)
+          : [...current, label];
+        syncUrl(activeTag, next);
+        return next;
+      });
+      setVisibleCount(BATCH_SIZE);
+    },
+    [syncUrl, activeTag]
+  );
 
   const visiblePhotos = useMemo(
     () => filteredPhotos.slice(0, visibleCount),

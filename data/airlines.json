@@ -25,265 +25,140 @@
     }
   ],
   "airlines": {
+    "3U": {
+      "name": "Sichuan Airlines",
+      "alliance": null,
+      "domain": "sichuanair.com"
+    },
     "A3": {
       "name": "Aegean Airlines",
       "alliance": "star",
       "domain": "aegeanair.com"
-    },
-    "AC": {
-      "name": "Air Canada",
-      "alliance": "star",
-      "domain": "aircanada.com"
-    },
-    "CA": {
-      "name": "Air China",
-      "alliance": "star",
-      "domain": "airchina.com"
-    },
-    "AI": {
-      "name": "Air India",
-      "alliance": "star",
-      "domain": "airindia.com"
-    },
-    "NZ": {
-      "name": "Air New Zealand",
-      "alliance": "star",
-      "domain": "airnewzealand.com"
-    },
-    "NH": {
-      "name": "All Nippon Airways",
-      "alliance": "star",
-      "domain": "ana.co.jp"
-    },
-    "OZ": {
-      "name": "Asiana Airlines",
-      "alliance": "star",
-      "domain": "flyasiana.com"
-    },
-    "OS": {
-      "name": "Austrian Airlines",
-      "alliance": "star",
-      "domain": "austrian.com"
-    },
-    "AV": {
-      "name": "Avianca",
-      "alliance": "star",
-      "domain": "avianca.com"
-    },
-    "SN": {
-      "name": "Brussels Airlines",
-      "alliance": "star",
-      "domain": "brusselsairlines.com"
-    },
-    "CM": {
-      "name": "Copa Airlines",
-      "alliance": "star",
-      "domain": "copaair.com"
-    },
-    "OU": {
-      "name": "Croatia Airlines",
-      "alliance": "star",
-      "domain": "croatiaairlines.com"
-    },
-    "MS": {
-      "name": "EGYPTAIR",
-      "alliance": "star",
-      "domain": "egyptair.com"
-    },
-    "ET": {
-      "name": "Ethiopian Airlines",
-      "alliance": "star",
-      "domain": "ethiopianairlines.com"
-    },
-    "BR": {
-      "name": "EVA Air",
-      "alliance": "star",
-      "domain": "evaair.com"
-    },
-    "AZ": {
-      "name": "ITA Airways",
-      "alliance": "star",
-      "domain": "ita-airways.com"
-    },
-    "LO": {
-      "name": "LOT Polish Airlines",
-      "alliance": "star",
-      "domain": "lot.com"
-    },
-    "LH": {
-      "name": "Lufthansa",
-      "alliance": "star",
-      "domain": "lufthansa.com"
-    },
-    "ZH": {
-      "name": "Shenzhen Airlines",
-      "alliance": "star",
-      "domain": "shenzhenair.com"
-    },
-    "SQ": {
-      "name": "Singapore Airlines",
-      "alliance": "star",
-      "domain": "singaporeair.com"
-    },
-    "SA": {
-      "name": "South African Airways",
-      "alliance": "star",
-      "domain": "flysaa.com"
-    },
-    "LX": {
-      "name": "SWISS",
-      "alliance": "star",
-      "domain": "swiss.com"
-    },
-    "TP": {
-      "name": "TAP Air Portugal",
-      "alliance": "star",
-      "domain": "flytap.com"
-    },
-    "TG": {
-      "name": "Thai Airways",
-      "alliance": "star",
-      "domain": "thaiairways.com"
-    },
-    "TK": {
-      "name": "Turkish Airlines",
-      "alliance": "star",
-      "domain": "turkishairlines.com"
-    },
-    "UA": {
-      "name": "United Airlines",
-      "alliance": "star",
-      "domain": "united.com"
-    },
-    "SU": {
-      "name": "Aeroflot",
-      "alliance": "skyteam",
-      "domain": "aeroflot.ru"
-    },
-    "AR": {
-      "name": "Aerolíneas Argentinas",
-      "alliance": "skyteam",
-      "domain": "aerolineas.com.ar"
-    },
-    "AM": {
-      "name": "Aeroméxico",
-      "alliance": "skyteam",
-      "domain": "aeromexico.com"
-    },
-    "UX": {
-      "name": "Air Europa",
-      "alliance": "skyteam",
-      "domain": "aireuropa.com"
-    },
-    "AF": {
-      "name": "Air France",
-      "alliance": "skyteam",
-      "domain": "airfrance.com"
-    },
-    "CI": {
-      "name": "China Airlines",
-      "alliance": "skyteam",
-      "domain": "china-airlines.com"
-    },
-    "MU": {
-      "name": "China Eastern Airlines",
-      "alliance": "skyteam",
-      "domain": "ceair.com"
-    },
-    "DL": {
-      "name": "Delta Air Lines",
-      "alliance": "skyteam",
-      "domain": "delta.com"
-    },
-    "GA": {
-      "name": "Garuda Indonesia",
-      "alliance": "skyteam",
-      "domain": "garuda-indonesia.com"
-    },
-    "KQ": {
-      "name": "Kenya Airways",
-      "alliance": "skyteam",
-      "domain": "kenya-airways.com"
-    },
-    "KL": {
-      "name": "KLM Royal Dutch Airlines",
-      "alliance": "skyteam",
-      "domain": "klm.com"
-    },
-    "KE": {
-      "name": "Korean Air",
-      "alliance": "skyteam",
-      "domain": "koreanair.com"
-    },
-    "ME": {
-      "name": "Middle East Airlines",
-      "alliance": "skyteam",
-      "domain": "mea.com.lb"
-    },
-    "SK": {
-      "name": "SAS",
-      "alliance": "skyteam",
-      "domain": "flysas.com"
-    },
-    "SV": {
-      "name": "Saudia",
-      "alliance": "skyteam",
-      "domain": "saudia.com"
-    },
-    "DV": {
-      "name": "SCAT Airlines",
-      "alliance": "skyteam",
-      "domain": "scat.kz"
-    },
-    "RO": {
-      "name": "TAROM",
-      "alliance": "skyteam",
-      "domain": "tarom.ro"
-    },
-    "VN": {
-      "name": "Vietnam Airlines",
-      "alliance": "skyteam",
-      "domain": "vietnamairlines.com"
-    },
-    "VS": {
-      "name": "Virgin Atlantic",
-      "alliance": "skyteam",
-      "domain": "virginatlantic.com"
-    },
-    "MF": {
-      "name": "XiamenAir",
-      "alliance": "skyteam",
-      "domain": "xiamenair.com"
-    },
-    "AS": {
-      "name": "Alaska Airlines",
-      "alliance": "oneworld",
-      "domain": "alaskaair.com"
     },
     "AA": {
       "name": "American Airlines",
       "alliance": "oneworld",
       "domain": "aa.com"
     },
+    "AC": {
+      "name": "Air Canada",
+      "alliance": "star",
+      "domain": "aircanada.com"
+    },
+    "AF": {
+      "name": "Air France",
+      "alliance": "skyteam",
+      "domain": "airfrance.com"
+    },
+    "AI": {
+      "name": "Air India",
+      "alliance": "star",
+      "domain": "airindia.com"
+    },
+    "AM": {
+      "name": "Aeroméxico",
+      "alliance": "skyteam",
+      "domain": "aeromexico.com"
+    },
+    "AR": {
+      "name": "Aerolíneas Argentinas",
+      "alliance": "skyteam",
+      "domain": "aerolineas.com.ar"
+    },
+    "AS": {
+      "name": "Alaska Airlines",
+      "alliance": "oneworld",
+      "domain": "alaskaair.com"
+    },
+    "AT": {
+      "name": "Royal Air Maroc",
+      "alliance": "oneworld",
+      "domain": "royalairmaroc.com"
+    },
+    "AV": {
+      "name": "Avianca",
+      "alliance": "star",
+      "domain": "avianca.com"
+    },
+    "AY": {
+      "name": "Finnair",
+      "alliance": "oneworld",
+      "domain": "finnair.com"
+    },
+    "AZ": {
+      "name": "ITA Airways",
+      "alliance": "star",
+      "domain": "ita-airways.com"
+    },
     "BA": {
       "name": "British Airways",
       "alliance": "oneworld",
       "domain": "britishairways.com"
+    },
+    "BR": {
+      "name": "EVA Air",
+      "alliance": "star",
+      "domain": "evaair.com"
+    },
+    "CA": {
+      "name": "Air China",
+      "alliance": "star",
+      "domain": "airchina.com"
+    },
+    "CI": {
+      "name": "China Airlines",
+      "alliance": "skyteam",
+      "domain": "china-airlines.com"
+    },
+    "CM": {
+      "name": "Copa Airlines",
+      "alliance": "star",
+      "domain": "copaair.com"
     },
     "CX": {
       "name": "Cathay Pacific",
       "alliance": "oneworld",
       "domain": "cathaypacific.com"
     },
+    "DL": {
+      "name": "Delta Air Lines",
+      "alliance": "skyteam",
+      "domain": "delta.com"
+    },
+    "DV": {
+      "name": "SCAT Airlines",
+      "alliance": "skyteam",
+      "domain": "scat.kz"
+    },
+    "EI": {
+      "name": "Aer Lingus",
+      "alliance": null,
+      "domain": "aerlingus.com"
+    },
+    "ET": {
+      "name": "Ethiopian Airlines",
+      "alliance": "star",
+      "domain": "ethiopianairlines.com"
+    },
     "FJ": {
       "name": "Fiji Airways",
       "alliance": "oneworld",
       "domain": "fijiairways.com"
     },
-    "AY": {
-      "name": "Finnair",
-      "alliance": "oneworld",
-      "domain": "finnair.com"
+    "G4": {
+      "name": "Allegiant Air",
+      "alliance": null,
+      "domain": "allegiantair.com"
+    },
+    "GA": {
+      "name": "Garuda Indonesia",
+      "alliance": "skyteam",
+      "domain": "garuda-indonesia.com"
+    },
+    "HO": {
+      "name": "Juneyao Air",
+      "alliance": null,
+      "domain": "juneyaoair.com"
     },
     "IB": {
       "name": "Iberia",
@@ -295,15 +170,90 @@
       "alliance": "oneworld",
       "domain": "jal.co.jp"
     },
+    "JX": {
+      "name": "STARLUX Airlines",
+      "alliance": null,
+      "domain": "starlux-airlines.com"
+    },
+    "KE": {
+      "name": "Korean Air",
+      "alliance": "skyteam",
+      "domain": "koreanair.com"
+    },
+    "KL": {
+      "name": "KLM Royal Dutch Airlines",
+      "alliance": "skyteam",
+      "domain": "klm.com"
+    },
+    "KQ": {
+      "name": "Kenya Airways",
+      "alliance": "skyteam",
+      "domain": "kenya-airways.com"
+    },
+    "LH": {
+      "name": "Lufthansa",
+      "alliance": "star",
+      "domain": "lufthansa.com"
+    },
+    "LO": {
+      "name": "LOT Polish Airlines",
+      "alliance": "star",
+      "domain": "lot.com"
+    },
+    "LX": {
+      "name": "SWISS",
+      "alliance": "star",
+      "domain": "swiss.com"
+    },
+    "ME": {
+      "name": "Middle East Airlines",
+      "alliance": "skyteam",
+      "domain": "mea.com.lb"
+    },
+    "MF": {
+      "name": "XiamenAir",
+      "alliance": "skyteam",
+      "domain": "xiamenair.com"
+    },
     "MH": {
       "name": "Malaysia Airlines",
       "alliance": "oneworld",
       "domain": "malaysiaairlines.com"
     },
-    "WY": {
-      "name": "Oman Air",
-      "alliance": "oneworld",
-      "domain": "omanair.com"
+    "MS": {
+      "name": "EGYPTAIR",
+      "alliance": "star",
+      "domain": "egyptair.com"
+    },
+    "MU": {
+      "name": "China Eastern Airlines",
+      "alliance": "skyteam",
+      "domain": "ceair.com"
+    },
+    "NH": {
+      "name": "All Nippon Airways",
+      "alliance": "star",
+      "domain": "ana.co.jp"
+    },
+    "NZ": {
+      "name": "Air New Zealand",
+      "alliance": "star",
+      "domain": "airnewzealand.com"
+    },
+    "OS": {
+      "name": "Austrian Airlines",
+      "alliance": "star",
+      "domain": "austrian.com"
+    },
+    "OU": {
+      "name": "Croatia Airlines",
+      "alliance": "star",
+      "domain": "croatiaairlines.com"
+    },
+    "OZ": {
+      "name": "Asiana Airlines",
+      "alliance": "star",
+      "domain": "flyasiana.com"
     },
     "QF": {
       "name": "Qantas",
@@ -315,30 +265,100 @@
       "alliance": "oneworld",
       "domain": "qatarairways.com"
     },
-    "AT": {
-      "name": "Royal Air Maroc",
-      "alliance": "oneworld",
-      "domain": "royalairmaroc.com"
-    },
     "RJ": {
       "name": "Royal Jordanian",
       "alliance": "oneworld",
       "domain": "rj.com"
+    },
+    "RO": {
+      "name": "TAROM",
+      "alliance": "skyteam",
+      "domain": "tarom.ro"
+    },
+    "SA": {
+      "name": "South African Airways",
+      "alliance": "star",
+      "domain": "flysaa.com"
+    },
+    "SK": {
+      "name": "SAS",
+      "alliance": "skyteam",
+      "domain": "flysas.com"
+    },
+    "SN": {
+      "name": "Brussels Airlines",
+      "alliance": "star",
+      "domain": "brusselsairlines.com"
+    },
+    "SQ": {
+      "name": "Singapore Airlines",
+      "alliance": "star",
+      "domain": "singaporeair.com"
+    },
+    "SU": {
+      "name": "Aeroflot",
+      "alliance": "skyteam",
+      "domain": "aeroflot.ru"
+    },
+    "SV": {
+      "name": "Saudia",
+      "alliance": "skyteam",
+      "domain": "saudia.com"
+    },
+    "TG": {
+      "name": "Thai Airways",
+      "alliance": "star",
+      "domain": "thaiairways.com"
+    },
+    "TK": {
+      "name": "Turkish Airlines",
+      "alliance": "star",
+      "domain": "turkishairlines.com"
+    },
+    "TP": {
+      "name": "TAP Air Portugal",
+      "alliance": "star",
+      "domain": "flytap.com"
+    },
+    "TR": {
+      "name": "Scoot",
+      "alliance": null,
+      "domain": "flyscoot.com"
+    },
+    "UA": {
+      "name": "United Airlines",
+      "alliance": "star",
+      "domain": "united.com"
     },
     "UL": {
       "name": "SriLankan Airlines",
       "alliance": "oneworld",
       "domain": "srilankan.com"
     },
-    "EI": {
-      "name": "Aer Lingus",
-      "alliance": null,
-      "domain": "aerlingus.com"
+    "UX": {
+      "name": "Air Europa",
+      "alliance": "skyteam",
+      "domain": "aireuropa.com"
     },
-    "G4": {
-      "name": "Allegiant Air",
-      "alliance": null,
-      "domain": "allegiantair.com"
+    "VN": {
+      "name": "Vietnam Airlines",
+      "alliance": "skyteam",
+      "domain": "vietnamairlines.com"
+    },
+    "VS": {
+      "name": "Virgin Atlantic",
+      "alliance": "skyteam",
+      "domain": "virginatlantic.com"
+    },
+    "WY": {
+      "name": "Oman Air",
+      "alliance": "oneworld",
+      "domain": "omanair.com"
+    },
+    "ZH": {
+      "name": "Shenzhen Airlines",
+      "alliance": "star",
+      "domain": "shenzhenair.com"
     }
   }
 }

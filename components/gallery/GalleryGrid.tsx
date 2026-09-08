@@ -10,6 +10,11 @@ import { type GalleryPhoto, describePhoto } from './types';
 
 interface Props {
   photos: GalleryPhoto[];
+  /**
+   * 不展示的筛选分组（按字段名，如 `航司`）。
+   * 航司详情页整页都是同一家，再列「航司」筛选没有意义。
+   */
+  excludeFacets?: string[];
 }
 
 const ALL = 'all';
@@ -18,7 +23,7 @@ const BATCH_SIZE = 24;
 /** 距离底部多远开始预加载下一批 */
 const PRELOAD_MARGIN = '600px';
 
-export default function GalleryGrid({ photos }: Props) {
+export default function GalleryGrid({ photos, excludeFacets = [] }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -33,6 +38,10 @@ export default function GalleryGrid({ photos }: Props) {
   const mounted = useMounted();
 
   const tags = useMemo(() => countBy(photos, (photo) => [photo.tag]), [photos]);
+  // 只有一个分类时「全部 9 / planes 9」是废话，整组不展示
+  const showCategories = tags.length > 1;
+  // 默认值 [] 每次渲染都是新数组，用内容当依赖，避免 memo 白重算
+  const excludeKey = excludeFacets.join('|');
 
   // 选中分类后的照片，附加标签的可选项和计数都基于它算，
   // 这样不会出现「选了东京还列着只在大阪出现的机型」这种死选项。
@@ -72,6 +81,7 @@ export default function GalleryGrid({ photos }: Props) {
       const separator = name.indexOf(':');
       const group = separator > 0 ? name.slice(0, separator) : '标签';
       const label = separator > 0 ? name.slice(separator + 1) : name;
+      if (excludeKey.split('|').includes(group)) return;
       if (!groups.has(group)) groups.set(group, []);
       groups.get(group)!.push({ name, label, count });
     });
@@ -80,7 +90,7 @@ export default function GalleryGrid({ photos }: Props) {
       items.sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, 'zh'))
     );
     return Array.from(groups, ([title, items]) => ({ title, items }));
-  }, [photosInTag, activeLabels]);
+  }, [photosInTag, activeLabels, excludeKey]);
 
   // 把筛选状态同步回 URL。replace 而非 push，免得筛几下就塞满浏览器历史；
   // scroll: false 保持当前滚动位置。
@@ -107,16 +117,18 @@ export default function GalleryGrid({ photos }: Props) {
 
   const toggleLabel = useCallback(
     (label: string) => {
-      setActiveLabels((current) => {
-        const next = current.includes(label)
-          ? current.filter((l) => l !== label)
-          : [...current, label];
-        syncUrl(activeTag, next);
-        return next;
-      });
+      // 先在事件处理里算出新值再 set，不要把 syncUrl 放进 setState 的 updater：
+      // updater 是在渲染阶段执行的（严格模式下还会执行两次），
+      // 在里面调 router.replace 会触发
+      // "Cannot update a component (Router) while rendering a different component"。
+      const next = activeLabels.includes(label)
+        ? activeLabels.filter((l) => l !== label)
+        : [...activeLabels, label];
+      setActiveLabels(next);
       setVisibleCount(BATCH_SIZE);
+      syncUrl(activeTag, next);
     },
-    [syncUrl, activeTag]
+    [syncUrl, activeTag, activeLabels]
   );
 
   const visiblePhotos = useMemo(
@@ -162,13 +174,15 @@ export default function GalleryGrid({ photos }: Props) {
     <div>
       {/* 移动端：横向滚动的标签条 */}
       <div className="sm:hidden">
-        <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
-          {categories.map(({ name, label, count }) => (
-            <Pill key={name} active={activeTag === name} onClick={() => selectTag(name)}>
-              {label} ({count})
-            </Pill>
-          ))}
-        </div>
+        {showCategories && (
+          <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+            {categories.map(({ name, label, count }) => (
+              <Pill key={name} active={activeTag === name} onClick={() => selectTag(name)}>
+                {label} ({count})
+              </Pill>
+            ))}
+          </div>
+        )}
         {labelGroups.map(({ title, items }) => (
           <div
             key={title}
@@ -194,11 +208,13 @@ export default function GalleryGrid({ photos }: Props) {
         {/* 桌面端：固定在侧边的标签栏 */}
         <aside className="hidden sm:block">
           <nav className="sticky top-24 max-h-[calc(100vh-8rem)] w-36 space-y-5 overflow-y-auto lg:w-44">
-            <SidebarGroup
-              items={categories.map(({ name, label, count }) => ({ name, label, count }))}
-              isActive={(name) => activeTag === name}
-              onSelect={selectTag}
-            />
+            {showCategories && (
+              <SidebarGroup
+                items={categories.map(({ name, label, count }) => ({ name, label, count }))}
+                isActive={(name) => activeTag === name}
+                onSelect={selectTag}
+              />
+            )}
             {labelGroups.map(({ title, items }) => (
               <SidebarGroup
                 key={title}

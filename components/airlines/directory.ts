@@ -12,7 +12,7 @@ export interface DirectoryAirline {
   name: string;
   photoCount: number;
   aircraft: string[];
-  /** 跳转到相册并筛出该航司的链接，没拍到的为 null */
+  /** 该航司的详情页地址，没拍到的为 null */
   href: string | null;
   /** 图标路径，public/static/images/airlines/<slug>.* 存在时才有 */
   icon: string | null;
@@ -62,9 +62,9 @@ function memberKeys(member: RawMember): string[] {
   return names.map(normalize);
 }
 
-/** 相册页的筛选状态可以从 URL 还原，目录页据此生成链接 */
-export function galleryHref(field: string, value: string): string {
-  return `/gallery?tag=${encodeURIComponent(`${field}:${value}`)}`;
+/** 航司详情页的地址。/gallery?tag=… 那种筛选链接仍然可用，只是不再从目录页进入 */
+export function airlineHref(name: string): string {
+  return `/airlines/${airlineSlug(name)}`;
 }
 
 /**
@@ -108,7 +108,7 @@ export function buildDirectory(
       name: entry.name,
       photoCount: entry.photos.length,
       aircraft,
-      href: galleryHref(AIRLINE_FIELD, entry.name),
+      href: airlineHref(entry.name),
       icon: iconFor(canonicalName, entry.name),
     };
   };

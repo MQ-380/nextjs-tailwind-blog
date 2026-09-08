@@ -25,7 +25,7 @@ export default function AirlineRow({ airline, unclassified }: Props) {
 
   return (
     <Link
-      href={href ?? '/gallery'}
+      href={href ?? '/airlines'}
       className="group -mx-3 flex items-center gap-4 rounded-md px-3 py-3 transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800"
     >
       <span className="flex w-[160px] shrink-0 items-center gap-2">

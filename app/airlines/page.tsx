@@ -1,7 +1,10 @@
+import fs from 'fs';
+import path from 'path';
+
 import SectionContainer from '@/components/SectionContainer';
 import AirlineRow from '@/components/airlines/AirlineRow';
 import MissingAirlines from '@/components/airlines/MissingAirlines';
-import { buildDirectory } from '@/components/airlines/directory';
+import { airlineSlug, buildDirectory } from '@/components/airlines/directory';
 import type { GalleryPhoto } from '@/components/gallery/types';
 import PageTitle from '@/components/posts/PageTitle';
 
@@ -11,8 +14,27 @@ export const metadata = {
   title: '航司目录',
 };
 
+const ICON_DIR = 'public/static/images/airlines';
+
+/**
+ * 扫描图标目录，得到 slug → 文件名。放在页面（服务端组件）里做，
+ * directory.ts 就不必依赖 fs，也就不会被拖进客户端包。
+ */
+function readIcons(): Record<string, string> {
+  try {
+    return Object.fromEntries(
+      fs
+        .readdirSync(ICON_DIR)
+        .filter((file) => /\.(png|jpe?g|svg|webp)$/i.test(file))
+        .map((file) => [airlineSlug(path.basename(file, path.extname(file))), file])
+    );
+  } catch {
+    return {};
+  }
+}
+
 export default function AirlinesPage() {
-  const directory = buildDirectory(galleryData as GalleryPhoto[]);
+  const directory = buildDirectory(galleryData as GalleryPhoto[], readIcons());
   const { alliances, unaffiliated, unclassified, totals } = directory;
 
   if (totals.airlines === 0) {

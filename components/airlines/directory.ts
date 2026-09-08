@@ -14,6 +14,16 @@ export interface DirectoryAirline {
   aircraft: string[];
   /** 跳转到相册并筛出该航司的链接，没拍到的为 null */
   href: string | null;
+  /** 图标路径，public/static/images/airlines/<slug>.* 存在时才有 */
+  icon: string | null;
+}
+
+/** 航司名 → 图标文件名。`Aer Lingus` → `aer-lingus` */
+export function airlineSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
 }
 
 export interface DirectoryAlliance {
@@ -57,7 +67,19 @@ export function galleryHref(field: string, value: string): string {
   return `/gallery?tag=${encodeURIComponent(`${field}:${value}`)}`;
 }
 
-export function buildDirectory(photos: GalleryPhoto[]): Directory {
+/**
+ * @param icons 可用图标的 slug → 文件名。由调用方（服务端）扫描目录得到，
+ *   这样这个模块不依赖 fs，也就不会把 Node API 拖进客户端包。
+ */
+export function buildDirectory(
+  photos: GalleryPhoto[],
+  icons: Record<string, string> = {}
+): Directory {
+  const iconFor = (name: string) => {
+    const file = icons[airlineSlug(name)];
+    return file ? `/static/images/airlines/${file}` : null;
+  };
+
   // 先按航司归拢照片
   const byAirline = new Map<string, { name: string; photos: GalleryPhoto[] }>();
   const airports = new Set<string>();
@@ -81,6 +103,7 @@ export function buildDirectory(photos: GalleryPhoto[]): Directory {
       photoCount: entry.photos.length,
       aircraft,
       href: galleryHref(AIRLINE_FIELD, entry.name),
+      icon: iconFor(entry.name),
     };
   };
 

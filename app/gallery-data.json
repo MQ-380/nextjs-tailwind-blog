@@ -20,24 +20,24 @@
     "filename": "United_B757-200_IAD_N41135.jpg"
   },
   {
-    "id": "planes/United_B757-200_IAD_N225UA.jpg",
-    "src": "/static/images/gallery/planes/United_B757-200_IAD_N225UA.jpg",
+    "id": "planes/United_B777-200ER_IAD_N225UA.jpg",
+    "src": "/static/images/gallery/planes/United_B777-200ER_IAD_N225UA.jpg",
     "tag": "planes",
     "tags": [
       "航司:United",
-      "机型:B757-200",
+      "机型:B777-200ER",
       "机场:IAD"
     ],
     "fields": {
       "航司": "United",
-      "机型": "B757-200",
+      "机型": "B777-200ER",
       "机场": "IAD",
       "注册号": "N225UA"
     },
     "caption": null,
     "width": 2560,
     "height": 1707,
-    "filename": "United_B757-200_IAD_N225UA.jpg"
+    "filename": "United_B777-200ER_IAD_N225UA.jpg"
   },
   {
     "id": "planes/Qatar_B777-300ER_IAD_A7-BEF.jpg",

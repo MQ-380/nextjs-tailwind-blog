@@ -20,16 +20,18 @@ const Tag = ({ text }: Props) => {
     return Math.abs(hash);
   };
 
-  // 预定义一些柔和的颜色组合
+  // 预定义一些柔和的颜色组合。
+  // 深色模式下浅色底会变成一片高亮色块糊在近黑背景上，所以改用低透明度的同色底
+  // 加浅色文字，保留区分度但不刺眼。
   const colorPairs = [
-    { bg: 'bg-blue-100', text: 'text-blue-800' },
-    { bg: 'bg-green-100', text: 'text-green-800' },
-    { bg: 'bg-purple-100', text: 'text-purple-800' },
-    { bg: 'bg-pink-100', text: 'text-pink-800' },
-    { bg: 'bg-yellow-100', text: 'text-yellow-800' },
-    { bg: 'bg-red-100', text: 'text-red-800' },
-    { bg: 'bg-indigo-100', text: 'text-indigo-800' },
-    { bg: 'bg-orange-100', text: 'text-orange-800' },
+    { bg: 'bg-blue-100 dark:bg-blue-400/10', text: 'text-blue-800 dark:text-blue-300' },
+    { bg: 'bg-green-100 dark:bg-green-400/10', text: 'text-green-800 dark:text-green-300' },
+    { bg: 'bg-purple-100 dark:bg-purple-400/10', text: 'text-purple-800 dark:text-purple-300' },
+    { bg: 'bg-pink-100 dark:bg-pink-400/10', text: 'text-pink-800 dark:text-pink-300' },
+    { bg: 'bg-yellow-100 dark:bg-yellow-400/10', text: 'text-yellow-800 dark:text-yellow-300' },
+    { bg: 'bg-red-100 dark:bg-red-400/10', text: 'text-red-800 dark:text-red-300' },
+    { bg: 'bg-indigo-100 dark:bg-indigo-400/10', text: 'text-indigo-800 dark:text-indigo-300' },
+    { bg: 'bg-orange-100 dark:bg-orange-400/10', text: 'text-orange-800 dark:text-orange-300' },
   ];
 
   // 根据tag文本选择固定的颜色

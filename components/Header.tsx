@@ -26,9 +26,8 @@ export default function Header() {
           <div className="mr-3">
             <Image src={Logo} alt="logo" width={24} height={24} />
           </div>
-          <div className="hidden h-6 text-2xl font-semibold sm:block">
-            {siteMetadata.headerTitle}
-          </div>
+          {/* 手机上原本整个隐藏，只剩一个小头像，没有任何站点标识 */}
+          <div className="h-6 text-xl font-semibold sm:text-2xl">{siteMetadata.headerTitle}</div>
         </div>
       </Link>
 

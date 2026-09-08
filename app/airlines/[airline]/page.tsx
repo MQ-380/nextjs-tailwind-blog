@@ -69,7 +69,7 @@ export default async function AirlinePage({ params }: { params: Promise<{ airlin
           >
             <path d="M15 18l-6-6 6-6" />
           </svg>
-          航司目录
+          Izumi的机库
         </Link>
 
         <div className="flex flex-col gap-5 pt-4 pb-8 sm:flex-row sm:items-end sm:justify-between sm:gap-8">

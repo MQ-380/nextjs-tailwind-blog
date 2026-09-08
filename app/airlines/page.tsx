@@ -11,7 +11,7 @@ import PageTitle from '@/components/posts/PageTitle';
 import galleryData from '@/app/gallery-data.json';
 
 export const metadata = {
-  title: '航司目录',
+  title: 'Izumi的机库',
 };
 
 const ICON_DIR = 'public/static/images/airlines';
@@ -41,7 +41,7 @@ export default function AirlinesPage() {
     return (
       <SectionContainer>
         <div className="space-y-6 pt-6 pb-8">
-          <PageTitle>航司目录</PageTitle>
+          <PageTitle>Izumi的机库</PageTitle>
           <p className="text-gray-500 dark:text-gray-400">
             还没有带航司信息的照片。给 planes 目录配好 schema.json 后，这里会自动按联盟汇总。
           </p>
@@ -55,9 +55,9 @@ export default function AirlinesPage() {
       <div className="pt-6 pb-16">
         <div className="flex flex-col gap-6 pb-2 sm:flex-row sm:items-end sm:justify-between sm:gap-8">
           <div>
-            <PageTitle>航司目录</PageTitle>
+            <PageTitle>Izumi的机库</PageTitle>
             <p className="mt-3 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-gray-400">
-              按所属联盟汇总拍到的航空公司。点任意一行进入相册，自动筛选出该航司的全部照片。
+              欢迎来到我的飞机相片基地
             </p>
           </div>
           <dl className="flex shrink-0 gap-7 sm:pb-1.5">

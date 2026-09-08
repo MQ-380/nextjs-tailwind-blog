@@ -23,6 +23,8 @@ const LOOKUPS = {
 // 每张照片放在 public/static/images/gallery/<tag>/ 下，
 // 文件夹名即为该照片的 tag（飞机 / 城市名 / 任意分类），支持中文文件夹名。
 const OUTPUT_FILE = 'app/gallery-data.json';
+const ICON_DIR = 'public/static/images/airlines';
+const ICON_OUTPUT_FILE = 'app/airline-icons.json';
 
 /**
  * 读取分类目录下的 schema.json，声明文件名各段的字段名：
@@ -163,6 +165,34 @@ async function generateGallery() {
 
   await fs.writeFile(OUTPUT_FILE, JSON.stringify(output, null, 2) + '\n');
   console.log(`[generate-gallery] 生成 ${output.length} 张照片 -> ${OUTPUT_FILE}`);
+
+  await writeIconIndex();
+}
+
+/**
+ * 把可用的航司图标扫成一份清单供页面 import。
+ * 页面不再在渲染时读文件系统——那样一旦页面变成动态渲染，
+ * Vercel 的函数环境里没有 public/ 目录，读取会失败且难以察觉。
+ */
+async function writeIconIndex() {
+  let files = [];
+  try {
+    files = await fs.readdir(ICON_DIR);
+  } catch {
+    console.warn(`[generate-gallery] 图标目录不存在，跳过：${ICON_DIR}`);
+  }
+
+  const icons = Object.fromEntries(
+    files
+      .filter((file) => /\.(png|jpe?g|svg|webp)$/i.test(file))
+      .map((file) => [path.basename(file, path.extname(file)).toLowerCase(), file])
+      .sort(([a], [b]) => a.localeCompare(b))
+  );
+
+  await fs.writeFile(ICON_OUTPUT_FILE, JSON.stringify(icons, null, 2) + '\n');
+  console.log(
+    `[generate-gallery] 生成 ${Object.keys(icons).length} 个航司图标索引 -> ${ICON_OUTPUT_FILE}`
+  );
 }
 
 generateGallery();

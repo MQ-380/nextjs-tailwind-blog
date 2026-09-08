@@ -68,18 +68,18 @@
   z-index: 1;
 }
 
-@media (prefers-color-scheme: dark) {
-  html.dark .post-wrapper li:nth-child(odd),
-  html.dark .post-wrapper li:nth-child(odd) {
-    background-image: linear-gradient(
-      to left,
-      rgb(26, 26, 30),
-      rgb(39, 39, 45),
-      rgb(39, 39, 45),
-      rgb(39, 39, 45),
-      rgb(26, 26, 30)
-    );
-  }
+/* 主题用的是 class 模式（tailwind.config.js 里 darkMode: 'class'），
+   这里不能再套 prefers-color-scheme：系统为浅色、用户手动切到深色时媒体查询
+   不成立，奇数行会拿到下面那条纯白渐变，在深色页面上变成刺眼的白条。 */
+html.dark .post-wrapper li:nth-child(odd) {
+  background-image: linear-gradient(
+    to left,
+    rgb(26, 26, 30),
+    rgb(39, 39, 45),
+    rgb(39, 39, 45),
+    rgb(39, 39, 45),
+    rgb(26, 26, 30)
+  );
 }
 
 .post-wrapper li:nth-child(odd) {

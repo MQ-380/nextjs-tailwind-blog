@@ -23,7 +23,8 @@ export default async function Timeline() {
     <SectionContainer>
       <ScrollTop />
 
-      <div className="archives flex flex-col justify-center">
+      {/* 条目内容只有日期和标题，不收窄的话斑马纹会横跨 1280px 拖出大片空高亮条 */}
+      <div className="archives mx-auto flex w-full max-w-3xl flex-col justify-center">
         {Object.entries(postsByYears)
           .sort(([yearA], [yearB]) => parseInt(yearB) - parseInt(yearA))
           .map(([year, yearPosts]) => (

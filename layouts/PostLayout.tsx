@@ -31,10 +31,13 @@ const postDateTemplate: Intl.DateTimeFormatOptions = {
 export default function PostLayout({ content, next, prev, children }: LayoutProps) {
   const { date, title, tags, toc, readingTime } = content;
 
+  const hasToc = toc.length > 0;
+
   return (
     <SectionContainer>
       <ScrollTop />
-      <article>
+      {/* 没有目录的文章不需要给侧栏留位置，整篇收窄居中，避免右侧 2/7 空着 */}
+      <article className={hasToc ? undefined : 'xl:mx-auto xl:max-w-3xl'}>
         <div>
           <header className="justify-between pt-6 xl:flex xl:pb-6">
             <div className="space-y-1 text-left xl:w-2/3">
@@ -70,9 +73,11 @@ export default function PostLayout({ content, next, prev, children }: LayoutProp
           {/* 移除外层的 xl:divide-y，改为flex布局 */}
           <div className="xl:flex xl:gap-x-6">
             {/* 内容区域 */}
-            <div className="xl:w-5/7">
+            <div className={`min-w-0 ${hasToc ? 'xl:w-5/7' : 'xl:w-full'}`}>
               <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                <div className="prose dark:prose-invert max-w-none pt-10 pb-8">{children}</div>
+                {/* 限制行长：正文以中文为主，每行 40 字左右最舒服，
+                    prose 默认的 65ch 是按西文算的，这里按中文重新定 */}
+                <div className="prose dark:prose-invert max-w-[42rem] pt-10 pb-8">{children}</div>
 
                 {/* 将 footer 移到内容区域内 */}
                 <footer>
@@ -93,7 +98,7 @@ export default function PostLayout({ content, next, prev, children }: LayoutProp
             </div>
 
             {/* 目录区域 */}
-            {toc.length > 0 && (
+            {hasToc && (
               <aside className="hidden xl:block xl:w-2/7">
                 <div className="sticky top-60 max-h-[calc(100vh-6rem)] overflow-y-auto">
                   <TableOfContents toc={toc} />

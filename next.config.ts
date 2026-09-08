@@ -6,10 +6,15 @@ import { withContentlayer } from 'next-contentlayer2'
 const output = process.env.EXPORT ? 'export' : undefined
 const basePath = process.env.BASE_PATH || undefined
 const unoptimized = process.env.UNOPTIMIZED ? true : undefined
+// 允许把构建产物输出到别的目录。next dev 和 next build 共用 .next 但产物结构不同，
+// 开发服务器运行时跑生产构建会把它依赖的 manifest 覆盖掉，页面报
+// "missing required error components"。用 npm run build:check 验证构建即可避开。
+const distDir = process.env.DIST_DIR || undefined
 
 const nextConfig: NextConfig = {
   output,
   basePath,
+  distDir,
   reactStrictMode: true,
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
   eslint: {

@@ -45,3 +45,4 @@ next-env.d.ts
 
 # 设计画布的已烘焙产物（约 2.4MB，含编辑器代码），可从 design/*.dc.html 重新生成
 design/airline-directory.html
+/.next-check/

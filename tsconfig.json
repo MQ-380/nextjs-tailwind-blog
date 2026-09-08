@@ -34,6 +34,7 @@
     ".contentlayer/generated",
     ".contentlayer/generated/**/*.json",
     ".next/types/**/*.ts",
+    ".next-check/types/**/*.ts",
     "components/sw.jsx"
   ],
   "exclude": ["node_modules"]

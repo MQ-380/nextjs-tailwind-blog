@@ -55,7 +55,7 @@ export default async function AirportPage({ params }: { params: Promise<{ airpor
     <SectionContainer>
       <div className="pt-6 pb-16">
         <Link
-          href="/airlines?view=airport"
+          href="/airports"
           className="hover:text-primary-500 dark:hover:text-primary-400 -ml-1 inline-flex items-center gap-1.5 text-sm text-gray-500 transition-colors duration-200 dark:text-gray-400"
         >
           <svg

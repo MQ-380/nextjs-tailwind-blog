@@ -95,6 +95,11 @@
       "alliance": "oneworld",
       "domain": "britishairways.com"
     },
+    "BC": {
+      "name": "Skymark Airlines",
+      "alliance": null,
+      "domain": "skymark.co.jp"
+    },
     "BR": {
       "name": "EVA Air",
       "alliance": "star",
@@ -119,6 +124,11 @@
       "name": "Cathay Pacific",
       "alliance": "oneworld",
       "domain": "cathaypacific.com"
+    },
+    "CZ": {
+      "name": "China Southern Airlines",
+      "alliance": null,
+      "domain": "csair.com"
     },
     "DL": {
       "name": "Delta Air Lines",

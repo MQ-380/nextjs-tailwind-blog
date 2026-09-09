@@ -32,6 +32,12 @@
     }
   ],
   "airports": {
+    "HND": {
+      "name": "东京羽田机场",
+      "en": "Tokyo Haneda",
+      "city": "东京",
+      "region": "asia"
+    },
     "IAD": {
       "name": "华盛顿杜勒斯国际机场",
       "en": "Washington Dulles",

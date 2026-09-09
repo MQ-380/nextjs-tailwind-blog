@@ -4,6 +4,7 @@ import sharp from 'sharp';
 
 import galleryData from '../app/gallery-data.json' with { type: 'json' };
 import airlinesConfig from '../data/airlines.json' with { type: 'json' };
+import { writeIconIndex } from './icon-index.mjs';
 
 // 抓取航司官网 favicon 作为目录页的图标。
 //
@@ -101,6 +102,9 @@ async function main() {
     `\n[fetch-airline-icons] 新增 ${saved.length} 个，跳过 ${skipped} 个已存在的` +
       (all ? '' : `（只处理已拍到的航司，加 --all 抓全部 ${allCodes().length} 家）`)
   );
+
+  // 图标目录变了就同步索引，免得页面读到过期的清单
+  if (saved.length > 0) await writeIconIndex();
 
   if (lowRes.length > 0) {
     console.warn(

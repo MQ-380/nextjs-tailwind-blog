@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
+import FilterDropdown from './FilterDropdown';
 import GalleryLightbox from './GalleryLightbox';
 import { type GalleryPhoto, describePhoto } from './types';
 
@@ -22,6 +23,20 @@ const ALL = 'all';
 const BATCH_SIZE = 24;
 /** 距离底部多远开始预加载下一批 */
 const PRELOAD_MARGIN = '600px';
+/**
+ * 筛选分组的展示顺序。没列进来的排在后面，按出现顺序。
+ *
+ * 和 schema.json 的 fields 顺序无关——那个是文件名的段序，改不了；
+ * 这里纯粹是「先看哪个」的问题：彩绘选项少又最好玩，放最上面。
+ */
+const GROUP_ORDER = ['彩绘', '航司', '机型', '机场'];
+/**
+ * 选项超过这个数的分组收进下拉框。
+ * 航司三十几家、机型二十几种，平铺出来侧边栏会长得没边；
+ * 彩绘、机场只有几个，收起来反而多一次点击。用数量自动判断，
+ * 以后照片变多、新分组出现都不用再改这里。
+ */
+const DROPDOWN_THRESHOLD = 10;
 
 export default function GalleryGrid({ photos, excludeFacets = [] }: Props) {
   const router = useRouter();
@@ -94,7 +109,16 @@ export default function GalleryGrid({ photos, excludeFacets = [] }: Props) {
     groups.forEach((items) =>
       items.sort((a, b) => b.base - a.base || a.label.localeCompare(b.label, 'zh'))
     );
-    return Array.from(groups, ([title, items]) => ({ title, items }));
+
+    // 分组本身也要有固定顺序：Map 的插入顺序取决于第一张照片的标签顺序，
+    // 换一批照片就可能变，侧边栏的区块会莫名其妙地换位置。
+    const rank = (title: string) => {
+      const index = GROUP_ORDER.indexOf(title);
+      return index === -1 ? GROUP_ORDER.length : index;
+    };
+    return Array.from(groups, ([title, items]) => ({ title, items })).sort(
+      (a, b) => rank(a.title) - rank(b.title)
+    );
   }, [photosInTag, activeLabels, excludeKey]);
 
   // 把筛选状态同步回 URL。replace 而非 push，免得筛几下就塞满浏览器历史；
@@ -129,6 +153,19 @@ export default function GalleryGrid({ photos, excludeFacets = [] }: Props) {
       const next = activeLabels.includes(label)
         ? activeLabels.filter((l) => l !== label)
         : [...activeLabels, label];
+      setActiveLabels(next);
+      setVisibleCount(BATCH_SIZE);
+      syncUrl(activeTag, next);
+    },
+    [syncUrl, activeTag, activeLabels]
+  );
+
+  // 下拉框里的「清除已选」：按选项名剔除，而不是按 `分组:` 前缀匹配——
+  // 没有冒号的标签会落进「标签」组，前缀匹配对它们不成立。
+  const clearLabels = useCallback(
+    (names: string[]) => {
+      const drop = new Set(names);
+      const next = activeLabels.filter((label) => !drop.has(label));
       setActiveLabels(next);
       setVisibleCount(BATCH_SIZE);
       syncUrl(activeTag, next);
@@ -188,25 +225,49 @@ export default function GalleryGrid({ photos, excludeFacets = [] }: Props) {
             ))}
           </div>
         )}
-        {labelGroups.map(({ title, items }) => (
-          <div
-            key={title}
-            className="no-scrollbar -mx-4 mt-2 flex items-center gap-2 overflow-x-auto px-4 pb-1"
-          >
-            <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500">{title}</span>
-            {items.map(({ name, label, count }) => (
-              <Pill
-                key={name}
-                active={activeLabels.includes(name)}
-                onClick={() => toggleLabel(name)}
-                subtle
-                dim={!activeLabels.includes(name) && count === 0}
-              >
-                {label} ({count})
-              </Pill>
-            ))}
-          </div>
-        ))}
+        {labelGroups.map(({ title, items }) => {
+          const selected = items
+            .filter(({ name }) => activeLabels.includes(name))
+            .map(({ name }) => name);
+
+          // 选项多的分组在手机上更该收起来：几十个 pill 横向划过去根本找不到目标
+          if (items.length > DROPDOWN_THRESHOLD) {
+            return (
+              <div key={title} className="mt-2 flex items-center gap-2">
+                <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500">{title}</span>
+                <div className="min-w-0 flex-1">
+                  <FilterDropdown
+                    title={title}
+                    items={items}
+                    selected={selected}
+                    onToggle={toggleLabel}
+                    onClear={() => clearLabels(items.map(({ name }) => name))}
+                  />
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div
+              key={title}
+              className="no-scrollbar -mx-4 mt-2 flex items-center gap-2 overflow-x-auto px-4 pb-1"
+            >
+              <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500">{title}</span>
+              {items.map(({ name, label, count }) => (
+                <Pill
+                  key={name}
+                  active={activeLabels.includes(name)}
+                  onClick={() => toggleLabel(name)}
+                  subtle
+                  dim={!activeLabels.includes(name) && count === 0}
+                >
+                  {label} ({count})
+                </Pill>
+              ))}
+            </div>
+          );
+        })}
       </div>
       <div className="mb-6 sm:mb-0" />
 
@@ -221,15 +282,36 @@ export default function GalleryGrid({ photos, excludeFacets = [] }: Props) {
                 onSelect={selectTag}
               />
             )}
-            {labelGroups.map(({ title, items }) => (
-              <SidebarGroup
-                key={title}
-                title={title}
-                items={items}
-                isActive={(name) => activeLabels.includes(name)}
-                onSelect={toggleLabel}
-              />
-            ))}
+            {labelGroups.map(({ title, items }) => {
+              const selected = items
+                .filter(({ name }) => activeLabels.includes(name))
+                .map(({ name }) => name);
+
+              if (items.length > DROPDOWN_THRESHOLD) {
+                return (
+                  <div key={title}>
+                    <GroupTitle>{title}</GroupTitle>
+                    <FilterDropdown
+                      title={title}
+                      items={items}
+                      selected={selected}
+                      onToggle={toggleLabel}
+                      onClear={() => clearLabels(items.map(({ name }) => name))}
+                    />
+                  </div>
+                );
+              }
+
+              return (
+                <SidebarGroup
+                  key={title}
+                  title={title}
+                  items={items}
+                  isActive={(name) => activeLabels.includes(name)}
+                  onSelect={toggleLabel}
+                />
+              );
+            })}
           </nav>
         </aside>
 
@@ -352,6 +434,15 @@ function Pill({
   );
 }
 
+/** 侧边栏分组标题。平铺列表和下拉框共用，免得两边样式各写一份日后走样 */
+function GroupTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="px-3 pb-1 text-xs tracking-wide text-gray-400 uppercase dark:text-gray-500">
+      {children}
+    </h2>
+  );
+}
+
 function SidebarGroup({
   title,
   items,
@@ -367,11 +458,7 @@ function SidebarGroup({
   const dim = (count: number, active: boolean) => !active && count === 0;
   return (
     <div>
-      {title && (
-        <h2 className="px-3 pb-1 text-xs tracking-wide text-gray-400 uppercase dark:text-gray-500">
-          {title}
-        </h2>
-      )}
+      {title && <GroupTitle>{title}</GroupTitle>}
       <ul className="space-y-1">
         {items.map(({ name, label, count }) => {
           const active = isActive(name);

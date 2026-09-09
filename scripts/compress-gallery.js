@@ -30,7 +30,8 @@ function isGalleryImage(filePath) {
 }
 
 async function compressFile(filePath) {
-  const before = (await fs.stat(filePath)).size;
+  const stat = await fs.stat(filePath);
+  const before = stat.size;
   const metadata = await sharp(filePath).metadata();
   const longEdge = Math.max(metadata.width ?? 0, metadata.height ?? 0);
 
@@ -66,6 +67,9 @@ async function compressFile(filePath) {
   }
 
   await fs.rename(tempPath, filePath);
+  // 相册按 mtime 倒序排列（所以拷照片时要用 cp -p 保留拍摄时间）。
+  // 重新编码会把 mtime 刷成当下，一整批照片的先后就全丢了，这里把它还原回去。
+  await fs.utimes(filePath, stat.atime, stat.mtime);
   return { skipped: false, before, after, longEdge };
 }
 

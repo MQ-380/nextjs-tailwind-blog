@@ -5,7 +5,7 @@
     "alliance 为 null 表示已确认不属于任何联盟；代码不在本表里的会进「未分类」组提醒补录——",
     "没有这个区分，新航司会被静默归进无联盟组，自动分类就失灵了。",
     "联盟成员会变动（SAS 已于 2024 年由星空转投天合，ITA 被汉莎收购后转投星空），需人工维护。",
-    "domain 用于 scripts/fetch-airline-icons.mjs 抓取官网 favicon。"
+    "domain 用于 scripts/fetch-airline-icons.mjs 抓取官网 favicon；没有独立官网的（如上航已并入东航）写 null，脚本会跳过，页面退回首字母标记。"
   ],
   "alliances": [
     {
@@ -29,6 +29,16 @@
       "name": "Sichuan Airlines",
       "alliance": null,
       "domain": "sichuanair.com"
+    },
+    "6J": {
+      "name": "Solaseed Air",
+      "alliance": null,
+      "domain": "solaseedair.jp"
+    },
+    "7G": {
+      "name": "StarFlyer",
+      "alliance": null,
+      "domain": "starflyer.jp"
     },
     "A3": {
       "name": "Aegean Airlines",
@@ -155,6 +165,11 @@
       "alliance": "oneworld",
       "domain": "fijiairways.com"
     },
+    "FM": {
+      "name": "Shanghai Airlines",
+      "alliance": "skyteam",
+      "domain": null
+    },
     "G4": {
       "name": "Allegiant Air",
       "alliance": null,
@@ -164,6 +179,16 @@
       "name": "Garuda Indonesia",
       "alliance": "skyteam",
       "domain": "garuda-indonesia.com"
+    },
+    "HA": {
+      "name": "Hawaiian Airlines",
+      "alliance": null,
+      "domain": "hawaiianairlines.com"
+    },
+    "HD": {
+      "name": "AIRDO",
+      "alliance": null,
+      "domain": "airdo.jp"
     },
     "HO": {
       "name": "Juneyao Air",

@@ -39,7 +39,7 @@ export interface Directory {
   totals: { airlines: number; photos: number; airports: number };
 }
 
-type AirlineInfo = { name: string; alliance: string | null; domain: string };
+type AirlineInfo = { name: string; alliance: string | null; domain: string | null };
 const AIRLINES = airlinesConfig.airlines as Record<string, AirlineInfo>;
 
 /** 详情页地址与图标文件名都用小写代码 */

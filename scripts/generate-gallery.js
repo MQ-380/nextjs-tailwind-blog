@@ -48,12 +48,19 @@ async function readSchema(tagDir) {
 /**
  * 按 schema 把文件名逐段解析成字段。分隔符是下划线，段内允许空格和连字符，
  * 所以 `Aer Lingus_A321-200LR_IAD_EI-LRD.jpg` 能正确拆成四段。
+ *
+ * 末尾多出的纯数字段是「同一架飞机的第几张」——文件名必须唯一，而同一架机身
+ * 迟早会拍到第二张（如 NH_B767-300_HND_JA614A_SA_2.jpg）。它只用于区分文件，
+ * 不参与字段解析，也不算「多余段」。
  */
 function parseFilename(filename, schema) {
   if (!schema) return { fields: {}, codes: {}, tags: [] };
 
   const base = filename.slice(0, filename.length - path.extname(filename).length);
   const segments = base.split('_').map((s) => s.trim());
+  if (segments.length > schema.fields.length && /^\d+$/.test(segments[segments.length - 1])) {
+    segments.pop();
+  }
 
   const fields = {};
   const codes = {};
